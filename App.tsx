@@ -37,7 +37,7 @@ const App: React.FC = () => {
     // After text logs, show Jarvis Intro
     setTimeout(() => {
         setIntroActive(true);
-        SoundService.speak("Hello. I am Jarvis.");
+        SoundService.speak("你好，欢迎来到无锡奥达工业");
         
         // After Intro, show main app
         setTimeout(() => {
@@ -64,7 +64,7 @@ const App: React.FC = () => {
                     className="z-10 group relative px-8 py-4 bg-transparent border border-holo-cyan text-holo-cyan font-display font-bold tracking-[0.3em] text-xl hover:bg-holo-cyan/10 transition-all duration-300 cursor-pointer"
                   >
                     <div className="absolute inset-0 w-full h-full border border-holo-cyan blur-[2px] opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    初始化 J.A.R.V.I.S.
+                    初始化 MES 系统
                   </button>
               )}
 
@@ -92,7 +92,7 @@ const App: React.FC = () => {
                   </div>
               )}
               
-              <div className="absolute bottom-8 text-[10px] text-gray-600">斯塔克工业 专有技术</div>
+              <div className="absolute bottom-8 text-[10px] text-gray-600">奥达工业 专有技术</div>
           </div>
       )
   }
