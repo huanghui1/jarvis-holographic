@@ -2,7 +2,7 @@
 import React, { useRef, useState, useCallback, Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import VideoFeed from './components/VideoFeed';
-import HolographicEarth from './components/HolographicEarth';
+import HolographicFactory from './components/HolographicFactory';
 import HUDOverlay from './components/HUDOverlay';
 import JarvisIntro from './components/JarvisIntro';
 import { HandTrackingState, RegionName } from './types';
@@ -111,17 +111,14 @@ const App: React.FC = () => {
       {/* 2. 3D Scene Layer (Earth) */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         <Canvas 
-            camera={{ position: [0, 0, 5], fov: 45 }} 
-            gl={{ alpha: true, antialias: false }} // Disable native AA for PostProcessing bloom efficiency
-            dpr={[1, 1.5]} // Optimization for high DPI screens
+            camera={{ position: [0, 0, 6], fov: 45 }} 
+            gl={{ alpha: true, antialias: false }}
+            dpr={[1, 1.5]}
         >
-            <Suspense fallback={null}>
-              <HolographicEarth 
-                  handTrackingRef={handTrackingRef} 
-                  setRegion={setCurrentRegion}
-              />
-            </Suspense>
-        </Canvas>
+              <Suspense fallback={null}>
+                 <HolographicFactory handTrackingRef={handTrackingRef} setRegion={setCurrentRegion} />
+              </Suspense>
+          </Canvas>
       </div>
 
       {/* 3. UI/HUD Layer */}

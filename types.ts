@@ -20,11 +20,11 @@ export interface HandTrackingState {
 }
 
 export enum RegionName {
-  AMERICAS = "美洲扇区",
-  PACIFIC = "太平洋监测区",
-  ASIA = "亚洲战区",
-  EUROPE = "欧洲防区",
-  AFRICA = "非洲资源区"
+  AMERICAS = "一号车间-总装",
+  PACIFIC = "二号车间-冲压",
+  ASIA = "三号车间-涂装",
+  EUROPE = "四号车间-动力",
+  AFRICA = "全厂监控视图"
 }
 
 export interface PanelPosition {

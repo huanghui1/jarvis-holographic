@@ -11,12 +11,16 @@
 
 ## 功能亮点
 
-- 全息地球：可旋转、倾斜、线框与云层叠加的发光地球效果（`components/HolographicEarth.tsx`）
-- 战术地形：左手“展开”手势切换到战术地形视图与目标标记动画
-- 手势控制：
-  - 右手水平移动控制旋转，垂直移动控制倾斜（`components/VideoFeed.tsx:94-103`）
-  - 右手捏合显示/隐藏情报面板（`components/HUDOverlay.tsx:266-278`）
-  - 左手张开程度控制缩放/展开（`components/VideoFeed.tsx:82-88`）
+- 全息智能工厂：包含4个精密车间的全息投影，支持细节放大与数据流展示（`components/HolographicFactory.tsx`）
+- 手势控制升级：
+  - 右手水平移动控制全景旋转，垂直移动控制倾斜（`components/HolographicFactory.tsx:242-254`）
+  - 右手捏合触发智能射线选中车间（Spatial Raycasting），带有脉冲光效与音效（`components/HolographicFactory.tsx:258-304`）
+  - 左手张开程度控制选中车间的悬浮放大（`components/HolographicFactory.tsx:306-312`）
+- 沉浸式视效：
+  - 全息材质（Fresnel Shader）：边缘发光、透明通透的科技质感
+  - 动态数据流：流动的蓝色光点管道连接中心与车间
+  - 雷达底座：带有动态扫描与拖尾效果的底部全息雷达
+  - 垂直激光扫描：选中物体时的动态激光反馈
 - 摄像头与骨骼绘制：Canvas 渲染双手骨架与动态指尖/手掌指示（`components/HUDOverlay.tsx`）
 - 启动序列与语音：系统引导动画与 TTS 声音提示（`components/JarvisIntro.tsx`、`services/soundService.ts`）
 - 科幻 HUD：尾迹/扫描线/仪表盘/数据源列表等多层叠加的 UI（`components/HUDOverlay.tsx`）
@@ -68,16 +72,17 @@
 
 ## 手势交互说明
 
-- 右手旋转/倾斜：将右手在画面中水平移动控制地球自转，垂直移动控制整体倾斜（`components/VideoFeed.tsx:94-103`、`components/HolographicEarth.tsx:320-347`）
-- 右手捏合：拇指与食指靠近触发捏合，显示/隐藏情报面板（`components/HUDOverlay.tsx:266-278`）
-- 左手展开：张开程度映射为扩展因子，控制缩放并在阈值后进入战术地形模式（`components/VideoFeed.tsx:82-88`、`components/HolographicEarth.tsx:349-391`）
+- 右手旋转/倾斜：将右手在画面中水平移动控制工厂全景旋转（注意方向已优化为直觉操作），垂直移动控制视角倾斜
+- 右手捏合选中：拇指与食指靠近捏合，智能射线将自动选中距离最近的车间，并触发脉冲高亮
+- 左手悬浮放大：选中车间后，张开左手手掌，该车间会悬浮并放大，方便查看细节
 
 ## 项目结构
 
 ```
 ├─ components/
 │  ├─ VideoFeed.tsx         # 摄像头采集与 MediaPipe 手势识别
-│  ├─ HolographicEarth.tsx  # Three.js 全息地球与战术地形
+│  ├─ HolographicFactory.tsx # [NEW] 全息智能工厂核心组件
+│  ├─ HolographicEarth.tsx  # [Legacy] 全息地球与战术地形
 │  ├─ HUDOverlay.tsx        # HUD 叠加层与情报面板、骨架绘制
 │  └─ JarvisIntro.tsx       # 启动序列动画
 ├─ services/
