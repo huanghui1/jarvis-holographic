@@ -10,6 +10,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const requestRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef<number>(-1);
+  const lastDetectionTimeRef = useRef<number>(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -51,16 +52,22 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
                 videoRef.current.readyState >= 2 && 
                 !videoRef.current.paused) {
               
-              if (videoRef.current.currentTime !== lastVideoTimeRef.current) {
-                  lastVideoTimeRef.current = videoRef.current.currentTime;
-                  
-                  try {
-                    const results = recognizer.recognizeForVideo(videoRef.current, Date.now());
-                    
-                    const newState: HandTrackingState = {
-                      leftHand: null,
-                      rightHand: null
-                    };
+              const now = Date.now();
+              // Optimize: Throttle detection to ~30 FPS (33ms) or lower to save CPU
+              // Adjust this value (e.g., 50ms = 20 FPS) if still lagging
+              if (now - lastDetectionTimeRef.current >= 40) { 
+                  lastDetectionTimeRef.current = now;
+
+                  if (videoRef.current.currentTime !== lastVideoTimeRef.current) {
+                      lastVideoTimeRef.current = videoRef.current.currentTime;
+                      
+                      try {
+                        const results = recognizer.recognizeForVideo(videoRef.current, now);
+                        
+                        const newState: HandTrackingState = {
+                          leftHand: null,
+                          rightHand: null
+                        };
 
                     if (results.landmarks) {
                       results.landmarks.forEach((landmarks, index) => {
@@ -123,6 +130,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
                   } catch (error) {
                     console.error("Tracking error:", error);
                   }
+                  }
               }
             }
             requestRef.current = requestAnimationFrame(renderLoop);
@@ -150,7 +158,9 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
   return (
     <video
       ref={videoRef}
-      className="absolute top-0 left-0 w-full h-full object-cover opacity-40 contrast-125 brightness-75 filter grayscale-[0.3] pointer-events-none transform -scale-x-100"
+      // Optimize: Removed heavy CSS filters (contrast, brightness, grayscale) for performance
+      // Kept only opacity and flip
+      className="absolute top-0 left-0 w-full h-full object-cover opacity-30 pointer-events-none transform -scale-x-100"
       playsInline
       muted
       autoPlay

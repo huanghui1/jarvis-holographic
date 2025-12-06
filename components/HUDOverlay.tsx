@@ -336,7 +336,7 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion 
       {/* --- TOP HEADER --- */}
       
       {/* Top Left: System Status */}
-      <div className="absolute top-8 left-8 z-30 flex flex-col gap-2 animate-pulse-fast">
+      {/* <div className="absolute top-8 left-8 z-30 flex flex-col gap-2 animate-pulse-fast">
         <div className="border-l-4 border-holo-cyan pl-4 bg-black/40 p-2 backdrop-blur-sm rounded-r-lg shadow-[0_0_15px_rgba(0,240,255,0.3)]">
           <h2 className="text-xl font-display font-bold text-white tracking-widest">奥达工业</h2>
           <div className="h-[1px] w-32 bg-holo-cyan my-1"></div>
@@ -345,7 +345,7 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion 
         <div className="font-mono text-[10px] text-klein-blue opacity-60 leading-tight h-24 overflow-hidden">
           {hexDump.map((line, i) => <div key={i}>{line}</div>)}
         </div>
-      </div>
+      </div> */}
 
       {/* Top Right: Title & Clock */}
       <div className="absolute top-8 right-8 z-30 text-right">

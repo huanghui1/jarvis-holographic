@@ -462,8 +462,9 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
 
   return (
     <group ref={groupRef} position={[0, -1, 0]}>
-        <EffectComposer enableNormalPass={false}>
-           <Bloom luminanceThreshold={0.1} mipmapBlur intensity={1.2} radius={0.7} />
+        <EffectComposer enableNormalPass={false} multisampling={0}>
+           {/* Optimize: Higher threshold to bloom only very bright parts, lower resolution radius */}
+           <Bloom luminanceThreshold={0.2} mipmapBlur intensity={0.8} radius={0.4} levels={4} />
         </EffectComposer>
 
         {/* Central Hub */}

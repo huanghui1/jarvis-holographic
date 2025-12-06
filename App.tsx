@@ -1,6 +1,7 @@
 
 import React, { useRef, useState, useCallback, Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { Perf } from 'r3f-perf';
 import VideoFeed from './components/VideoFeed';
 import HolographicFactory from './components/HolographicFactory';
 import HUDOverlay from './components/HUDOverlay';
@@ -44,7 +45,7 @@ const App: React.FC = () => {
              setIntroActive(false);
              setBooted(true);
              SoundService.playAmbientHum();
-        }, 2800); // Intro duration
+        }, 3500); // Intro duration
     }, 2500); // Boot text logs duration
   };
 
@@ -115,6 +116,7 @@ const App: React.FC = () => {
             gl={{ alpha: true, antialias: false }}
             dpr={[1, 1.5]}
         >
+              <Perf position="top-left" />
               <Suspense fallback={null}>
                  <HolographicFactory handTrackingRef={handTrackingRef} setRegion={setCurrentRegion} />
               </Suspense>
