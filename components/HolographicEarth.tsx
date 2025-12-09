@@ -1,8 +1,8 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
-import { TextureLoader, Mesh, AdditiveBlending, DoubleSide, Group, BufferAttribute, Vector3, PlaneGeometry } from 'three';
+import { useFrame, useLoader, useThree } from '@react-three/fiber';
+import { TextureLoader, Mesh, AdditiveBlending, DoubleSide, Group, BufferAttribute, Vector3, PlaneGeometry, Quaternion } from 'three';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import { Points, PointMaterial, Text } from '@react-three/drei';
+import { Points, PointMaterial, Text, Line } from '@react-three/drei';
 import * as random from 'maath/random/dist/maath-random.esm';
 import { HandTrackingState, RegionName } from '../types';
 import { SoundService } from '../services/soundService';
@@ -22,6 +22,37 @@ const TerrainModel: React.FC<{
     const fillMeshRef = useRef<Mesh>(null);
     const markersRef = useRef<Group>(null);
     const ringRef = useRef<Mesh>(null);
+    const planesRef = useRef<Group>(null);
+    const peopleRef = useRef<Group>(null);
+
+    const planes = useMemo(() => {
+        const list: { pos: Vector3; dir: number; speed: number; height: number; color: string }[] = [];
+        const count = 20;
+        for (let i = 0; i < count; i++) {
+            const x = (Math.random() - 0.5) * 10.0;
+            const y = (Math.random() - 0.5) * 10.0;
+            const h = 0.8 + Math.random() * 1.1;
+            const s = 0.2 + Math.random() * 0.3;
+            const d = Math.random() * Math.PI * 2;
+            const col = '#00F0FF';
+            list.push({ pos: new Vector3(x, y, 0), dir: d, speed: s, height: h, color: col });
+        }
+        return list;
+    }, []);
+
+    const people = useMemo(() => {
+        const list: { base: Vector3; dir: number; speed: number; range: number; color: string }[] = [];
+        const count = 30;
+        for (let i = 0; i < count; i++) {
+            const x = (Math.random() - 0.5) * 10.0;
+            const z = (Math.random() - 0.5) * 10.0;
+            const dir = Math.random() * Math.PI * 2;
+            const speed = 0.2 + Math.random() * 0.2;
+            const range = 0.8 + Math.random() * 1.6;
+            list.push({ base: new Vector3(x, 0, z), dir, speed, range, color: '#00F0FF' });
+        }
+        return list;
+    }, []);
 
     const [terrainData, setTerrainData] = useState<{
         geometry: PlaneGeometry;
@@ -29,13 +60,13 @@ const TerrainModel: React.FC<{
     } | null>(null);
 
     // 1. Generate Height Map Data (Procedural Terrain)
+    const { viewport } = useThree();
+
     useEffect(() => {
-        // CHANGED: Increased size from 6 to 12
-        const width = 12;
-        const depth = 12;
-        const segments = 64; // Increased segments for smoother large map
-        
-        const geom = new PlaneGeometry(width, depth, segments, segments);
+        const size = Math.max(viewport.width, viewport.height) * 8;
+        const segments = 200;
+
+        const geom = new PlaneGeometry(size, size, segments, segments);
         
         // Safety check for attributes
         if (!geom.attributes.position) {
@@ -85,16 +116,16 @@ const TerrainModel: React.FC<{
         return () => {
             geom.dispose();
         };
-    }, []);
+    }, [viewport.width, viewport.height]);
 
     // 2. Target Markers (Floating points above peaks)
     const markers = useMemo(() => {
         const items = [];
         const placeNames = ["SECTOR 7", "ALPHA BASE", "NORTH RIDGE", "OMEGA POINT", "ECHO STATION", "DELTA FORCE", "GRID 9", "ZERO NULL", "CYBER DOCK", "NEON CITY", "LUNA OUTPOST", "SOLAR ARRAY"];
         for(let i=0; i<12; i++) { // Increased marker count slightly
-            // CHANGED: Increased spread range to match 12x12 grid (was 4.5)
-            const x = (Math.random() - 0.5) * 10.0;
-            const z = (Math.random() - 0.5) * 10.0;
+            const s = Math.max(viewport.width, viewport.height) * 8;
+            const x = (Math.random() - 0.5) * s * 0.85;
+            const z = (Math.random() - 0.5) * s * 0.85;
             items.push({ 
                 position: new Vector3(x, 0, z), 
                 label: `TGT-${i}`,
@@ -102,7 +133,7 @@ const TerrainModel: React.FC<{
             });
         }
         return items;
-    }, []);
+    }, [viewport.width, viewport.height]);
 
     useFrame((state) => {
         if (!groupRef.current || !meshRef.current || !fillMeshRef.current || !terrainData) return;
@@ -175,6 +206,58 @@ const TerrainModel: React.FC<{
             ringRef.current.scale.setScalar(1 + (state.clock.elapsedTime % 2) * 0.5);
             (ringRef.current.material as any).opacity = 0.5 * (1 - (state.clock.elapsedTime % 2) / 2);
         }
+
+        if (planesRef.current) {
+            planesRef.current.visible = progress > 0.01;
+            const dt = state.clock.getDelta();
+            for (let i = 0; i < planes.length; i++) {
+                const p = planes[i];
+                p.dir += Math.sin(state.clock.elapsedTime * 0.25 + i) * 0.002; // slight wander
+                p.pos.x += Math.cos(p.dir) * p.speed * dt * 3.0;
+                p.pos.y += Math.sin(p.dir) * p.speed * dt * 3.0;
+                // bounds
+                const bound = 5.2;
+                if (p.pos.x > bound || p.pos.x < -bound || p.pos.y > bound || p.pos.y < -bound) {
+                    p.dir += Math.PI * 0.9;
+                    p.pos.x = Math.max(-bound, Math.min(bound, p.pos.x));
+                    p.pos.y = Math.max(-bound, Math.min(bound, p.pos.y));
+                }
+                const z = p.height + Math.sin(state.clock.elapsedTime * 1.6 + i) * 0.05;
+                const g = planesRef.current.children[i] as Group;
+                if (!g) continue;
+                g.position.set(p.pos.x, p.pos.y, z);
+                const dir = new Vector3(Math.cos(p.dir), Math.sin(p.dir), 0).normalize();
+                const quat = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), dir);
+                g.quaternion.copy(quat);
+                g.scale.setScalar(0.06);
+            }
+        }
+
+        if (peopleRef.current) {
+            peopleRef.current.visible = progress > 0.01;
+            const t = state.clock.elapsedTime;
+            const calcElevation = (x: number, y: number) => {
+                let zz = Math.sin(x * 0.4) * Math.cos(y * 0.4) * 1.5;
+                zz += Math.sin(x * 1.5 + y * 0.8) * 0.5;
+                zz += Math.cos(x * 2.0) * 0.2;
+                return Math.max(-0.5, zz);
+            };
+            for (let i = 0; i < people.length; i++) {
+                const p = people[i];
+                const offset = Math.sin(t * p.speed + i * 0.37) * p.range;
+                const px = p.base.x + Math.cos(p.dir) * offset;
+                const py = p.base.z + Math.sin(p.dir) * offset;
+                const base = calcElevation(px, py);
+                const flattened = base > 0 ? base : base * 0.2;
+                const targetH = flattened * 0.8 * progress;
+                const wave = Math.sin(px * 2 + t * 2) * 0.1 * progress;
+                const finalH = targetH + wave + 0.04 + Math.sin(t * 6 + i) * 0.01;
+                const g = peopleRef.current.children[i] as Group;
+                if (!g) continue;
+                g.position.set(px, py, finalH);
+                g.scale.setScalar(0.06);
+            }
+        }
     });
 
     if (!terrainData) return null;
@@ -182,15 +265,14 @@ const TerrainModel: React.FC<{
     return (
         <group ref={groupRef} visible={false}>
              {/* Slanted Tactical View */}
-             <group rotation={[-Math.PI / 2.5, 0, 0]} position={[0, -1, 0]}> 
+             <group rotation={[-Math.PI / 2.5, 0, 0]} position={[0, 0, 0]}> 
                 
-                <group ref={spinRef}>
-                    {/* Base Grid (Static floor) */}
-                    <gridHelper 
-                        args={[30, 30, 0x001133, 0x000510]} 
-                        position={[0, 0, 0.1]} 
-                        rotation={[Math.PI/2, 0, 0]}
-                    />
+        <group ref={spinRef}>
+            <gridHelper 
+                args={[Math.max(viewport.width, viewport.height) * 8, 160, 0x001133, 0x000510]} 
+                position={[0, 0, 0.1]} 
+                rotation={[Math.PI/2, 0, 0]}
+            />
 
                     {/* Wireframe Terrain */}
                     <mesh ref={meshRef} geometry={terrainData.geometry}>
@@ -277,6 +359,55 @@ const TerrainModel: React.FC<{
                         <ringGeometry args={[1.5, 1.55, 64]} />
                         <meshBasicMaterial color="#00F0FF" transparent opacity={0.5} blending={AdditiveBlending} side={DoubleSide} />
                     </mesh>
+                    <group ref={planesRef}>
+                        {planes.map((p, i) => (
+                            <group key={i} position={[0, 0, p.height]}>
+                                <Line points={[
+                                    new Vector3(0.0, -1.0, 0.0),
+                                    new Vector3(0.0, 1.0, 0.0),
+                                ]} color={p.color} linewidth={1.6} transparent opacity={0.95} />
+                                <Line points={[
+                                    new Vector3(0.0, 0.4, 0.0),
+                                    new Vector3(0.7, -0.2, 0.0),
+                                ]} color={p.color} linewidth={1.4} transparent opacity={0.95} />
+                                <Line points={[
+                                    new Vector3(0.0, 0.4, 0.0),
+                                    new Vector3(-0.7, -0.2, 0.0),
+                                ]} color={p.color} linewidth={1.4} transparent opacity={0.95} />
+                                <Line points={[
+                                    new Vector3(-0.35, -1.0, 0.0),
+                                    new Vector3(0.35, -1.0, 0.0),
+                                ]} color={p.color} linewidth={1.6} transparent opacity={0.95} />
+                            </group>
+                        ))}
+                    </group>
+
+                    <group ref={peopleRef}>
+                        {people.map((m, i) => (
+                            <group key={i} position={[m.base.x, m.base.z, 0]}>
+                                <Line points={[
+                                    new Vector3(0.0, 0.0, 0.2),
+                                    new Vector3(0.0, 0.0, 1.6),
+                                ]} color={m.color} linewidth={0.9} transparent opacity={0.85} />
+                                <Line points={[
+                                    new Vector3(-0.6, 0.0, 1.1),
+                                    new Vector3(0.6, 0.0, 1.1),
+                                ]} color={m.color} linewidth={0.8} transparent opacity={0.8} />
+                                <Line points={[
+                                    new Vector3(0.0, 0.0, 0.6),
+                                    new Vector3(-0.6, 0.0, 0.0),
+                                ]} color={m.color} linewidth={0.8} transparent opacity={0.75} />
+                                <Line points={[
+                                    new Vector3(0.0, 0.0, 0.6),
+                                    new Vector3(0.6, 0.0, 0.0),
+                                ]} color={m.color} linewidth={0.8} transparent opacity={0.75} />
+                                <mesh position={[0, 0, 1.9]} rotation={[Math.PI / 2, 0, 0]}>
+                                    <circleGeometry args={[0.3, 16]} />
+                                    <meshBasicMaterial color={m.color} transparent opacity={0.9} blending={AdditiveBlending} side={DoubleSide} depthWrite={false} />
+                                </mesh>
+                            </group>
+                        ))}
+                    </group>
                 </group>
              </group>
         </group>
@@ -297,9 +428,9 @@ const HolographicEarth: React.FC<HolographicEarthProps> = ({ handTrackingRef, se
 
   // Load Color, Normal, and Specular maps for realistic texture
   const [colorMap, normalMap, specularMap] = useLoader(TextureLoader, [
-    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
-    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_normal_2048.jpg',
-    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_specular_2048.jpg'
+    'assets/img/earth_atmos_2048.jpg',
+    'assets/img/earth_normal_2048.jpg',
+    'assets/img/earth_specular_2048.jpg'
   ]);
   
   const satelliteData = useMemo(() => {

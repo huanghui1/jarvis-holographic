@@ -20,8 +20,8 @@ export interface HandTrackingState {
 }
 
 export enum RegionName {
-  AMERICAS = "美洲扇区",
-  PACIFIC = "太平洋监测区",
+  AMERICAS = "美洲战区",
+  PACIFIC = "大洋洲监测区",
   ASIA = "亚洲战区",
   EUROPE = "欧洲防区",
   AFRICA = "非洲资源区"
@@ -30,14 +30,4 @@ export enum RegionName {
 export interface PanelPosition {
   x: number;
   y: number;
-}
-
-declare module '*.task' {
-  const url: string;
-  export default url;
-}
-
-declare module '*.task?url' {
-  const url: string;
-  export default url;
 }

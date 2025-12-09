@@ -1,5 +1,5 @@
 import { FilesetResolver, GestureRecognizer } from "@mediapipe/tasks-vision";
-import localModelUrl from "@/modules/gesture_recognizer.task?url";
+import modelUrl from "../assets/modules/gesture_recognizer.task?url";
 
 export class MediaPipeService {
   private static recognizer: GestureRecognizer | null = null;
@@ -28,28 +28,14 @@ export class MediaPipeService {
             );
         }
 
-        let recognizer: GestureRecognizer;
-        try {
-          recognizer = await GestureRecognizer.createFromOptions(vision, {
-            baseOptions: {
-              modelAssetPath: localModelUrl,
-              delegate: "GPU"
-            },
-            runningMode: "VIDEO",
-            numHands: 2,
-          });
-        } catch (e) {
-          console.warn('Local model load failed, falling back to remote CDN...', e);
-          recognizer = await GestureRecognizer.createFromOptions(vision, {
-            baseOptions: {
-              modelAssetPath:
-                "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
-              delegate: "GPU"
-            },
-            runningMode: "VIDEO",
-            numHands: 2,
-          });
-        }
+        const recognizer = await GestureRecognizer.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: modelUrl,
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO",
+          numHands: 2,
+        });
 
         console.log("MediaPipe Initialized Successfully");
         this.recognizer = recognizer;

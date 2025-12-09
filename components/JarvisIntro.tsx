@@ -35,7 +35,7 @@ const JarvisIntro: React.FC = () => {
             <div className="mt-6 flex flex-col items-center gap-2">
                 <div className="h-[1px] w-32 bg-holo-cyan/50"></div>
                 <div className="text-2xl font-sans font-bold text-white tracking-[0.5em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                    你好，我是贾维斯
+                    Hello，I'm Jarvis
                 </div>
                 <div className="h-[1px] w-32 bg-holo-cyan/50"></div>
             </div>
