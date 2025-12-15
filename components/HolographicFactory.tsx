@@ -1,7 +1,8 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Group, Mesh, AdditiveBlending, DoubleSide, Vector3, Color } from 'three';
-import { Text, Edges } from '@react-three/drei';
+import { Group, Mesh, AdditiveBlending, DoubleSide, Vector3, Color, LineSegments, EdgesGeometry, LineBasicMaterial, MeshStandardMaterial, ShaderMaterial } from 'three';
+import * as THREE from 'three';
+import { Text, Edges, useGLTF } from '@react-three/drei';
 import { HandTrackingState, RegionName } from '../types';
 import { SoundService } from '../services/soundService';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
@@ -301,6 +302,7 @@ const RadarBase = () => {
   useFrame((state) => {
     if (meshRef.current) {
        (meshRef.current.material as any).uniforms.uTime.value = state.clock.elapsedTime;
+       meshRef.current.rotation.z -= 0.005; // Add physical rotation
     }
   });
 
@@ -362,6 +364,63 @@ const RadarBase = () => {
      </mesh>
   )
 }
+
+// --- Loaded Model Component ---
+const HolographicMaterial = () => {
+  return useMemo(() => new ShaderMaterial({
+    uniforms: {
+      time: { value: 0 },
+      color: { value: new Color('#00ffff') },
+      opacity: { value: 0.85 },
+    },
+    vertexShader: `
+      varying vec3 vPosition;
+      void main() {
+        vPosition = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float time;
+      uniform vec3 color;
+      uniform float opacity;
+      varying vec3 vPosition;
+      
+      void main() {
+        float scanline = sin(vPosition.y * 20.0 + time * 3.0) * 0.5 + 0.5;
+        float fresnel = pow(1.0 - abs(dot(normalize(vPosition), vec3(0, 0, 1))), 2.0);
+        
+        vec3 finalColor = color * (0.3 + scanline * 0.7) + fresnel * 0.5;
+        gl_FragColor = vec4(finalColor, opacity * fresnel);
+      }
+    `,
+    transparent: true,
+    side: DoubleSide,
+  }), []);
+};
+
+const LoadedModel = () => {
+  const { scene } = useGLTF('/models/ironman.glb');
+  const ref = useRef<Group>(null);
+  const material = HolographicMaterial();
+
+  useEffect(() => {
+    scene.traverse((child) => {
+      if (child instanceof Mesh) {
+        child.material = material; 
+      }
+    });
+  }, [scene, material]);
+
+  useFrame((state) => {
+    if (ref.current) {
+      ref.current.rotation.y = state.clock.elapsedTime * 0.2;
+      material.uniforms.time.value = state.clock.elapsedTime;
+    }
+  });
+
+  return <primitive ref={ref} object={scene} position={[0, 1, 0]} />;
+};
 
 // --- Main Factory Scene ---
 const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef, setRegion }) => {
@@ -464,11 +523,14 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
     <group ref={groupRef} position={[0, -1, 0]}>
         <EffectComposer enableNormalPass={false} multisampling={0}>
            {/* Optimize: Higher threshold to bloom only very bright parts, lower resolution radius */}
-           <Bloom luminanceThreshold={0.2} mipmapBlur intensity={0.8} radius={0.4} levels={4} />
+           <Bloom luminanceThreshold={0.5} intensity={0.5} radius={0.4} levels={2} />
         </EffectComposer>
 
         {/* Central Hub */}
         <CentralHub />
+        
+        {/* Imported Model */}
+        <LoadedModel />
 
         {/* Floor Grid - Radar Base */}
         <RadarBase />
@@ -503,3 +565,5 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
 };
 
 export default HolographicFactory;
+
+useGLTF.preload('/models/ironman.glb');
