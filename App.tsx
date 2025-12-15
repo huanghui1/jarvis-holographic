@@ -80,7 +80,7 @@ const App: React.FC = () => {
   const [chatText, setChatText] = useState('');
   const [chatRole, setChatRole] = useState<'I' | 'J' | null>(null);
   const typeTimerRef = useRef<number | null>(null);
-  const [showMark, setShowMark] = useState(false);
+  const [showMark, setShowMark] = useState(true);
   const [showMap, setShowMap] = useState(false);
   const [scanActive, setScanActive] = useState(false);
   const [eyeActive, setEyeActive] = useState(false);

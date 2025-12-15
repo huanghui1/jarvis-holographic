@@ -11,15 +11,16 @@ export class LLMService {
 
   static async generateResponse(prompt: string): Promise<string> {
     this.initialize();
-    const useProxy = typeof window !== 'undefined' && window.location.host.startsWith('localhost:3000');
-    if (!useProxy && (!this.baseUrl || !this.apiKey)) return "Systems offline.";
+    // const useProxy = typeof window !== 'undefined' && window.location.host.startsWith('localhost:3000');
+    // if (!useProxy && (!this.baseUrl || !this.apiKey)) return "Systems offline.";
 
-    const url = useProxy
+    // const url = useProxy
+    const url = false
       ? `/api/llm/chat/completions`
-      : `${this.baseUrl!.replace(/\/$/, '')}/v1/chat/completions`;
+      : `${this.baseUrl!.replace(/\/$/, '')}/responses`;
     const body = {
       model: this.modelId || "auto",
-      messages: [
+      input: [
         {
           role: "system",
           content: "You need to fully embody JARVIS, the AI system from Marvel movies.Speak concisely and accurately, without rambling."
@@ -28,12 +29,13 @@ export class LLMService {
       ],
       stream: false
     };
-
+    debugger
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json"
       };
-      if (!useProxy && this.apiKey) {
+      // if (!useProxy && this.apiKey) {
+      if (this.apiKey) {
         headers.Authorization = `Bearer ${this.apiKey}`;
       }
       const res = await fetch(url, {
