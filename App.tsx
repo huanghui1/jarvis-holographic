@@ -133,6 +133,7 @@ const App: React.FC = () => {
                     handTrackingRef={handTrackingRef} 
                     setRegion={setCurrentRegion} 
                     onWorkshopClick={handleWorkshopClick}
+                    isModalOpen={detailModalOpen}
                  />
               </Suspense>
           </Canvas>
@@ -142,6 +143,8 @@ const App: React.FC = () => {
       <HUDOverlay 
         handTrackingRef={handTrackingRef} 
         currentRegion={currentRegion}
+        isModalOpen={detailModalOpen}
+        onCloseModal={() => setDetailModalOpen(false)}
       />
       
       {/* 4. Overlay Modals */}

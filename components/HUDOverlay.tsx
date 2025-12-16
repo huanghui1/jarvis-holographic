@@ -6,6 +6,8 @@ import { SoundService } from '../services/soundService';
 interface HUDOverlayProps {
   handTrackingRef: React.MutableRefObject<HandTrackingState>;
   currentRegion: RegionName;
+  isModalOpen?: boolean;
+  onCloseModal?: () => void;
 }
 
 import { SystemLoadChart, EnergyChart } from './HolographicCharts';
@@ -105,15 +107,24 @@ const FeedList = React.memo(() => {
 });
 
 
-const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion }) => {
+const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion, isModalOpen, onCloseModal }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number | null>(null);
   
   // UI State for Floating Panel - using Ref for performance
   const panelRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null); // Virtual Cursor
   
   const reticleRotationRef = useRef(0);
   const wasPinchingRef = useRef(false);
+  const isClosingRef = useRef(false);
+
+  // Reset closing lock when modal opens
+  useEffect(() => {
+      if (isModalOpen) {
+          isClosingRef.current = false;
+      }
+  }, [isModalOpen]);
 
   // Canvas Drawing Loop (Hand Skeletal & Effects)
   useEffect(() => {
@@ -193,59 +204,117 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion 
         }
       });
 
-      // --- LEFT HAND: EXPANSION GAUGE ---
-      if (hands.leftHand) {
-          const wrist = hands.leftHand.landmarks[0];
-          const gaugeX = (1 - wrist.x) * canvas.width - 100;
-          const gaugeY = wrist.y * canvas.height;
+      // --- VIRTUAL MOUSE CURSOR (RIGHT HAND INDEX) ---
+      if (hands.rightHand) {
+          const indexTip = hands.rightHand.landmarks[8];
+          const cursorX = (1 - indexTip.x) * canvas.width;
+          const cursorY = indexTip.y * canvas.height;
 
-          const exp = hands.leftHand.expansionFactor;
-          const isMaxed = exp > 0.95;
-          const gaugeColor = isMaxed ? '#FF2A2A' : '#00F0FF';
-
-          // Gauge Background
-          ctx.beginPath();
-          ctx.arc(gaugeX, gaugeY, 40, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(0, 47, 167, 0.5)';
-          ctx.lineWidth = 4;
-          ctx.stroke();
-
-          // Active Gauge Value
-          ctx.beginPath();
-          // Map 0-1 to angle
-          const startAngle = -Math.PI / 2;
-          const endAngle = startAngle + (exp * Math.PI * 2);
-          ctx.arc(gaugeX, gaugeY, 40, startAngle, endAngle);
-          ctx.strokeStyle = gaugeColor;
-          ctx.lineWidth = isMaxed ? 6 : 4; // Thicker when maxed
-          if (isMaxed) {
-              ctx.shadowColor = '#FF2A2A';
-              ctx.shadowBlur = 15;
-          } else {
-              ctx.shadowBlur = 0;
+          // Update Virtual Cursor DOM Position
+          if (cursorRef.current) {
+              cursorRef.current.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
+              // Only show cursor when modal is open (Mode Switch)
+              cursorRef.current.style.opacity = isModalOpen ? '1' : '0';
           }
-          ctx.stroke();
-          ctx.shadowBlur = 0; // Reset
 
-          // Text
-          ctx.fillStyle = gaugeColor;
-          ctx.font = isMaxed ? 'bold 14px "Orbitron"' : 'bold 12px "Orbitron"';
-          ctx.textAlign = 'center';
-          ctx.fillText(isMaxed ? "最大输出" : "解除限制", gaugeX, gaugeY - 10);
-          ctx.fillText(`${Math.round(exp * 100)}%`, gaugeX, gaugeY + 15);
-          ctx.textAlign = 'left'; // Reset
+          // Handle Clicks on Modal Elements
+          const isPinching = hands.rightHand.isPinching;
           
-          // Connecting line
-          ctx.beginPath();
-          ctx.moveTo((1 - wrist.x) * canvas.width - 25, wrist.y * canvas.height);
-          ctx.lineTo(gaugeX + 45, gaugeY);
-          ctx.strokeStyle = isMaxed ? 'rgba(255, 42, 42, 0.5)' : 'rgba(0, 240, 255, 0.3)';
-          ctx.lineWidth = 1;
-          ctx.stroke();
+          // If pinching started just now (Falling Edge of pinch state? No, Rising Edge: false -> true)
+          // Usually a click is "Down" or "Up". Let's simulate click on "Pinch Start".
+          if (isModalOpen && isPinching && !wasPinchingRef.current) {
+              SoundService.playLock();
+              
+              // Perform hit test
+              // Note: We need to temporarily hide the cursor element itself to not block the elementFromPoint check,
+              // or use pointer-events: none on the cursor.
+              // const target = document.elementFromPoint(cursorX, cursorY) as HTMLElement;
+              // if (target) {
+              //     target.click(); // Simulate click
+                  
+              //     // Visual feedback on cursor
+              //     if (cursorRef.current) {
+              //         cursorRef.current.style.backgroundColor = '#FF2A2A';
+              //         cursorRef.current.style.boxShadow = '0 0 15px #FF2A2A';
+              //         setTimeout(() => {
+              //             if (cursorRef.current) {
+              //                 cursorRef.current.style.backgroundColor = 'transparent';
+              //                 cursorRef.current.style.boxShadow = 'none';
+              //             }
+              //         }, 200);
+              //     }
+              // }
+          }
+      } else {
+          if (cursorRef.current) cursorRef.current.style.opacity = '0';
       }
 
-      // --- RIGHT HAND: PINCH TO SHOW INTEL ---
-      if (hands.rightHand) {
+      // --- LEFT HAND: FIST TO CLOSE MODAL ---
+      if (hands.leftHand && isModalOpen && !isClosingRef.current) {
+          // Check for Fist (Expansion Factor close to 0)
+          // Increased threshold to 0.4 for better sensitivity (easier to trigger)
+          const isFist = hands.leftHand.expansionFactor < 0.4;
+          
+          if (isFist) {
+              isClosingRef.current = true; // Lock to prevent multiple triggers
+              SoundService.playRelease();
+              if (onCloseModal) onCloseModal();
+          }
+      }
+
+      // --- LEFT HAND: EXPANSION GAUGE ---
+      // if (hands.leftHand && !isModalOpen) {
+      //     const wrist = hands.leftHand.landmarks[0];
+      //     const gaugeX = (1 - wrist.x) * canvas.width - 100;
+      //     const gaugeY = wrist.y * canvas.height;
+
+      //     const exp = hands.leftHand.expansionFactor;
+      //     const isMaxed = exp > 0.95;
+      //     const gaugeColor = isMaxed ? '#FF2A2A' : '#00F0FF';
+
+      //     // Gauge Background
+      //     ctx.beginPath();
+      //     ctx.arc(gaugeX, gaugeY, 40, 0, Math.PI * 2);
+      //     ctx.strokeStyle = 'rgba(0, 47, 167, 0.5)';
+      //     ctx.lineWidth = 4;
+      //     ctx.stroke();
+
+      //     // Active Gauge Value
+      //     ctx.beginPath();
+      //     // Map 0-1 to angle
+      //     const startAngle = -Math.PI / 2;
+      //     const endAngle = startAngle + (exp * Math.PI * 2);
+      //     ctx.arc(gaugeX, gaugeY, 40, startAngle, endAngle);
+      //     ctx.strokeStyle = gaugeColor;
+      //     ctx.lineWidth = isMaxed ? 6 : 4; // Thicker when maxed
+      //     if (isMaxed) {
+      //         ctx.shadowColor = '#FF2A2A';
+      //         ctx.shadowBlur = 15;
+      //     } else {
+      //         ctx.shadowBlur = 0;
+      //     }
+      //     ctx.stroke();
+      //     ctx.shadowBlur = 0; // Reset
+
+      //     // Text
+      //     ctx.fillStyle = gaugeColor;
+      //     ctx.font = isMaxed ? 'bold 14px "Orbitron"' : 'bold 12px "Orbitron"';
+      //     ctx.textAlign = 'center';
+      //     ctx.fillText(isMaxed ? "最大输出" : "解除限制", gaugeX, gaugeY - 10);
+      //     ctx.fillText(`${Math.round(exp * 100)}%`, gaugeX, gaugeY + 15);
+      //     ctx.textAlign = 'left'; // Reset
+          
+      //     // Connecting line
+      //     ctx.beginPath();
+      //     ctx.moveTo((1 - wrist.x) * canvas.width - 25, wrist.y * canvas.height);
+      //     ctx.lineTo(gaugeX + 45, gaugeY);
+      //     ctx.strokeStyle = isMaxed ? 'rgba(255, 42, 42, 0.5)' : 'rgba(0, 240, 255, 0.3)';
+      //     ctx.lineWidth = 1;
+      //     ctx.stroke();
+      // }
+
+      // --- RIGHT HAND: PINCH TO SHOW INTEL (Only if Modal NOT Open) ---
+      if (hands.rightHand && !isModalOpen) {
         const isPinching = hands.rightHand.isPinching;
         
         // Handle State Transition for Sound & Visibility (Direct DOM)
@@ -305,13 +374,20 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion 
             ctx.fill();
         }
       } else {
-          // If hand lost, hide panel
-          if (wasPinchingRef.current) {
+          // If hand lost or modal open, hide panel and reset pinch state tracking
+          if (wasPinchingRef.current || isModalOpen) {
               if (panelRef.current) {
                   panelRef.current.style.opacity = '0';
                   panelRef.current.style.pointerEvents = 'none';
               }
-              wasPinchingRef.current = false;
+              // Only reset state if hand is lost, otherwise we might trigger "Release" sound when modal opens
+              if (!hands.rightHand) wasPinchingRef.current = false;
+          }
+          
+          // If modal is open, we still need to track pinch state for the virtual cursor click logic above
+          // so we sync it here if we haven't already
+          if (hands.rightHand && isModalOpen) {
+              wasPinchingRef.current = hands.rightHand.isPinching;
           }
       }
 
@@ -322,7 +398,7 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion 
     return () => {
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
     }
-  }, [handTrackingRef]);
+  }, [handTrackingRef, isModalOpen, onCloseModal]);
 
   // Use React Portal to render the canvas directly into the document.body or a specific root container
   // to ensures it stays on top of everything, including Modals that are also portals.
@@ -479,6 +555,27 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion 
              <path d="M 4,0 L 0,10 L 0,150" fill="none" stroke="#FF2A2A" strokeWidth="1" />
         </svg>
       </div>
+
+      {/* --- VIRTUAL CURSOR (Visible only when Modal is Open) --- */}
+      <div 
+        ref={cursorRef}
+        className="fixed top-0 left-0 w-8 h-8 pointer-events-none z-[10000] transition-opacity duration-200 opacity-0"
+        style={{
+            marginTop: '-16px',
+            marginLeft: '-16px',
+        }}
+      >
+         {/* Cursor Ring */}
+         <div className="absolute inset-0 border-2 border-red-500 rounded-full animate-pulse shadow-[0_0_15px_#FF2A2A]"></div>
+         {/* Center Dot */}
+         <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+         {/* Crosshairs */}
+         <div className="absolute top-0 left-1/2 h-2 w-0.5 bg-red-500 transform -translate-x-1/2"></div>
+         <div className="absolute bottom-0 left-1/2 h-2 w-0.5 bg-red-500 transform -translate-x-1/2"></div>
+         <div className="absolute top-1/2 left-0 w-2 h-0.5 bg-red-500 transform -translate-y-1/2"></div>
+         <div className="absolute top-1/2 right-0 w-2 h-0.5 bg-red-500 transform -translate-y-1/2"></div>
+      </div>
+
     </div>
   </>);
 };

@@ -11,6 +11,7 @@ interface HolographicFactoryProps {
   handTrackingRef: React.MutableRefObject<HandTrackingState>;
   setRegion: (region: RegionName) => void;
   onWorkshopClick?: (workshopName: string) => void;
+  isModalOpen?: boolean;
 }
 
 // --- Advanced Holographic Material (Fresnel Shader) ---
@@ -424,7 +425,7 @@ const RadarBase = () => {
 // };
 
 // --- Main Factory Scene ---
-const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef, setRegion, onWorkshopClick }) => {
+const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef, setRegion, onWorkshopClick, isModalOpen }) => {
   const groupRef = useRef<Group>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const lastPinchState = useRef<boolean>(false);
@@ -441,6 +442,9 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
 
   useFrame((state) => {
     if (!groupRef.current) return;
+
+    // Disable all interactions if modal is open
+    if (isModalOpen) return;
 
     const rightHand = handTrackingRef.current.rightHand;
     const leftHand = handTrackingRef.current.leftHand;
