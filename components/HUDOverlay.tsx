@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { HandTrackingState, RegionName } from '../types';
 import { SoundService } from '../services/soundService';
 
@@ -323,9 +324,19 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion 
     }
   }, [handTrackingRef]);
 
-  return (
-    <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden font-sans text-holo-cyan select-none">
-      <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full z-20" />
+  // Use React Portal to render the canvas directly into the document.body or a specific root container
+  // to ensures it stays on top of everything, including Modals that are also portals.
+  const canvasPortal = createPortal(
+    <canvas 
+        ref={canvasRef} 
+        className="fixed top-0 left-0 w-full h-full z-[9999] pointer-events-none" 
+    />,
+    document.body
+  );
+
+  return (<>
+    {canvasPortal}
+    <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden font-sans text-holo-cyan select-none z-[9999]">
       <div className="vignette"></div>
       <div className="scanlines z-10 opacity-50"></div>
 
@@ -469,7 +480,7 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion 
         </svg>
       </div>
     </div>
-  );
+  </>);
 };
 
 export default HUDOverlay;

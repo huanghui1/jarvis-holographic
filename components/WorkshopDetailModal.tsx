@@ -105,6 +105,8 @@ export const WorkshopDetailModal: React.FC<WorkshopDetailModalProps> = React.mem
     </div>
   ), []);
 
+  const getContainer = useCallback(() => document.getElementById('root'), []);
+
   const themeConfig = useMemo(() => ({
       token: {
           colorText: '#00F0FF',
@@ -136,6 +138,7 @@ export const WorkshopDetailModal: React.FC<WorkshopDetailModalProps> = React.mem
             centered
             destroyOnClose
             modalRender={modalRender}
+            getContainer={getContainer}
             styles={modalStyles}
             closeIcon={<span className="text-holo-cyan text-xl hover:text-white transition-colors">×</span>}
         >
