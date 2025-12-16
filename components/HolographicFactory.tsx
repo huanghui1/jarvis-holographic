@@ -1,7 +1,7 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Group, Mesh, AdditiveBlending, DoubleSide, Vector3, Color, LineSegments, EdgesGeometry, LineBasicMaterial, MeshStandardMaterial, ShaderMaterial } from 'three';
-import * as THREE from 'three';
+// import * as THREE from 'three';
 import { Text, Edges, useGLTF } from '@react-three/drei';
 import { HandTrackingState, RegionName } from '../types';
 import { SoundService } from '../services/soundService';
@@ -366,61 +366,61 @@ const RadarBase = () => {
 }
 
 // --- Loaded Model Component ---
-const HolographicMaterial = () => {
-  return useMemo(() => new ShaderMaterial({
-    uniforms: {
-      time: { value: 0 },
-      color: { value: new Color('#00ffff') },
-      opacity: { value: 0.85 },
-    },
-    vertexShader: `
-      varying vec3 vPosition;
-      void main() {
-        vPosition = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform float time;
-      uniform vec3 color;
-      uniform float opacity;
-      varying vec3 vPosition;
+// const HolographicMaterial = () => {
+//   return useMemo(() => new ShaderMaterial({
+//     uniforms: {
+//       time: { value: 0 },
+//       color: { value: new Color('#00ffff') },
+//       opacity: { value: 0.85 },
+//     },
+//     vertexShader: `
+//       varying vec3 vPosition;
+//       void main() {
+//         vPosition = position;
+//         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+//       }
+//     `,
+//     fragmentShader: `
+//       uniform float time;
+//       uniform vec3 color;
+//       uniform float opacity;
+//       varying vec3 vPosition;
       
-      void main() {
-        float scanline = sin(vPosition.y * 20.0 + time * 3.0) * 0.5 + 0.5;
-        float fresnel = pow(1.0 - abs(dot(normalize(vPosition), vec3(0, 0, 1))), 2.0);
+//       void main() {
+//         float scanline = sin(vPosition.y * 20.0 + time * 3.0) * 0.5 + 0.5;
+//         float fresnel = pow(1.0 - abs(dot(normalize(vPosition), vec3(0, 0, 1))), 2.0);
         
-        vec3 finalColor = color * (0.3 + scanline * 0.7) + fresnel * 0.5;
-        gl_FragColor = vec4(finalColor, opacity * fresnel);
-      }
-    `,
-    transparent: true,
-    side: DoubleSide,
-  }), []);
-};
+//         vec3 finalColor = color * (0.3 + scanline * 0.7) + fresnel * 0.5;
+//         gl_FragColor = vec4(finalColor, opacity * fresnel);
+//       }
+//     `,
+//     transparent: true,
+//     side: DoubleSide,
+//   }), []);
+// };
 
-const LoadedModel = () => {
-  const { scene } = useGLTF('/models/ironman.glb');
-  const ref = useRef<Group>(null);
-  const material = HolographicMaterial();
+// const LoadedModel = () => {
+//   const { scene } = useGLTF('/models/ironman.glb');
+//   const ref = useRef<Group>(null);
+//   const material = HolographicMaterial();
 
-  useEffect(() => {
-    scene.traverse((child) => {
-      if (child instanceof Mesh) {
-        child.material = material; 
-      }
-    });
-  }, [scene, material]);
+//   useEffect(() => {
+//     scene.traverse((child) => {
+//       if (child instanceof Mesh) {
+//         child.material = material; 
+//       }
+//     });
+//   }, [scene, material]);
 
-  useFrame((state) => {
-    if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.2;
-      material.uniforms.time.value = state.clock.elapsedTime;
-    }
-  });
+//   useFrame((state) => {
+//     if (ref.current) {
+//       ref.current.rotation.y = state.clock.elapsedTime * 0.2;
+//       material.uniforms.time.value = state.clock.elapsedTime;
+//     }
+//   });
 
-  return <primitive ref={ref} object={scene} position={[0, 1, 0]} />;
-};
+//   return <primitive ref={ref} object={scene} position={[0, 1, 0]} />;
+// };
 
 // --- Main Factory Scene ---
 const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef, setRegion }) => {
@@ -530,7 +530,7 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
         <CentralHub />
         
         {/* Imported Model */}
-        <LoadedModel />
+        {/* <LoadedModel /> */}
 
         {/* Floor Grid - Radar Base */}
         <RadarBase />
