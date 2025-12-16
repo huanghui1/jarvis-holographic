@@ -10,6 +10,7 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 interface HolographicFactoryProps {
   handTrackingRef: React.MutableRefObject<HandTrackingState>;
   setRegion: (region: RegionName) => void;
+  onWorkshopClick?: (workshopName: string) => void;
 }
 
 // --- Advanced Holographic Material (Fresnel Shader) ---
@@ -423,7 +424,7 @@ const RadarBase = () => {
 // };
 
 // --- Main Factory Scene ---
-const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef, setRegion }) => {
+const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef, setRegion, onWorkshopClick }) => {
   const groupRef = useRef<Group>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const lastPinchState = useRef<boolean>(false);
@@ -437,7 +438,6 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
     { id: 2, label: "三号车间", region: RegionName.ASIA, pos: new Vector3(-2.5, 0, 2.5), color: "#00A0FF" },
     { id: 3, label: "四号车间", region: RegionName.EUROPE, pos: new Vector3(2.5, 0, 2.5), color: "#40E0D0" },
   ], []);
-// ... (rest of the file)
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -465,40 +465,25 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
 
     // --- 2. Selection (Right Hand Pinch) - Smart Raycasting ---
     if (rightHand) {
+        // Rising edge: Start Pinch
         if (rightHand.isPinching && !lastPinchState.current) {
-            // Rising edge: Perform spatial selection
-            
+            // ... (Raycasting logic same as before)
             // Get Index Finger Tip (Landmark 8)
             const indexTip = rightHand.landmarks[8];
-            
-            // Convert to Normalized Device Coordinates (NDC) [-1, 1]
-            // Assuming Mirrored Video: x=0 (Left in video) -> x=1 (Right on screen)
-            // Screen X = 1 - indexTip.x
-            // NDC X = (Screen X - 0.5) * 2 = (0.5 - indexTip.x) * 2
             const cursorX = (0.5 - indexTip.x) * 2;
-            const cursorY = (0.5 - indexTip.y) * 2; // Inverted Y for NDC
+            const cursorY = (0.5 - indexTip.y) * 2;
 
             let minDist = Infinity;
             let bestIdx = -1;
 
-            // Project each workshop position to screen space
             workshops.forEach((w, i) => {
-                // Get world position considering current rotation
-                // FIX: Offset to the visual center of the workshop (y=1 in local space)
-                // The workshop mesh is shifted up by 1 unit, so we target that center instead of the base (y=0)
                 const localPos = w.pos.clone().add(new Vector3(0, 1.0, 0));
                 const worldPos = localPos.applyMatrix4(groupRef.current!.matrixWorld);
                 const screenPos = worldPos.project(camera);
-
-                // Calculate 2D distance on screen
                 const dx = screenPos.x - cursorX;
                 const dy = screenPos.y - cursorY;
                 const dist = Math.sqrt(dx*dx + dy*dy);
 
-                // Heuristic: Prefer items closer to camera (smaller z) if needed, 
-                // but screen distance is usually enough for this UI.
-                
-                // Threshold for selection (e.g. 0.3 NDC units)
                 if (dist < 0.3 && dist < minDist) {
                     minDist = dist;
                     bestIdx = i;
@@ -511,6 +496,15 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
                 SoundService.playBlip();
             }
         }
+        
+        // Falling edge: End Pinch (Release) -> Trigger Click
+        if (!rightHand.isPinching && lastPinchState.current) {
+             if (selectedIndex !== null && onWorkshopClick) {
+                 // Trigger the detail modal for the currently selected workshop
+                 onWorkshopClick(workshops[selectedIndex].label);
+             }
+        }
+
         lastPinchState.current = rightHand.isPinching;
     }
 

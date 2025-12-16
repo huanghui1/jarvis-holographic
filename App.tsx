@@ -6,6 +6,7 @@ import VideoFeed from './components/VideoFeed';
 import HolographicFactory from './components/HolographicFactory';
 import HUDOverlay from './components/HUDOverlay';
 import JarvisIntro from './components/JarvisIntro';
+import { WorkshopDetailModal } from './components/WorkshopDetailModal';
 import { HandTrackingState, RegionName } from './types';
 import { SoundService } from './services/soundService';
 
@@ -20,8 +21,18 @@ const App: React.FC = () => {
   const [introActive, setIntroActive] = useState(false);
   const [bootStep, setBootStep] = useState(0);
 
+  // Detail Modal State
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null);
+
   const handleTrackingUpdate = useCallback((newState: HandTrackingState) => {
     handTrackingRef.current = newState;
+  }, []);
+
+  const handleWorkshopClick = useCallback((workshopName: string) => {
+      setSelectedWorkshop(workshopName);
+      setDetailModalOpen(true);
+      SoundService.playLock(); // Additional feedback
   }, []);
 
   // Boot Sequence Logic
@@ -118,7 +129,11 @@ const App: React.FC = () => {
         >
               <Perf position="top-left" />
               <Suspense fallback={null}>
-                 <HolographicFactory handTrackingRef={handTrackingRef} setRegion={setCurrentRegion} />
+                 <HolographicFactory 
+                    handTrackingRef={handTrackingRef} 
+                    setRegion={setCurrentRegion} 
+                    onWorkshopClick={handleWorkshopClick}
+                 />
               </Suspense>
           </Canvas>
       </div>
@@ -127,6 +142,13 @@ const App: React.FC = () => {
       <HUDOverlay 
         handTrackingRef={handTrackingRef} 
         currentRegion={currentRegion}
+      />
+      
+      {/* 4. Overlay Modals */}
+      <WorkshopDetailModal 
+         isOpen={detailModalOpen} 
+         onClose={() => setDetailModalOpen(false)} 
+         workshopName={selectedWorkshop}
       />
     </div>
   );
