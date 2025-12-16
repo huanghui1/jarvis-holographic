@@ -460,6 +460,8 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
     // Clamp X rotation to avoid flipping
     groupRef.current.rotation.x = Math.max(-0.5, Math.min(0.5, groupRef.current.rotation.x));
 
+    // Update matrix world to ensure raycasting uses the latest transform
+    groupRef.current.updateMatrixWorld();
 
     // --- 2. Selection (Right Hand Pinch) - Smart Raycasting ---
     if (rightHand) {
@@ -482,7 +484,10 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
             // Project each workshop position to screen space
             workshops.forEach((w, i) => {
                 // Get world position considering current rotation
-                const worldPos = w.pos.clone().applyMatrix4(groupRef.current!.matrixWorld);
+                // FIX: Offset to the visual center of the workshop (y=1 in local space)
+                // The workshop mesh is shifted up by 1 unit, so we target that center instead of the base (y=0)
+                const localPos = w.pos.clone().add(new Vector3(0, 1.0, 0));
+                const worldPos = localPos.applyMatrix4(groupRef.current!.matrixWorld);
                 const screenPos = worldPos.project(camera);
 
                 // Calculate 2D distance on screen
@@ -494,7 +499,7 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
                 // but screen distance is usually enough for this UI.
                 
                 // Threshold for selection (e.g. 0.3 NDC units)
-                if (dist < 0.5 && dist < minDist) {
+                if (dist < 0.3 && dist < minDist) {
                     minDist = dist;
                     bestIdx = i;
                 }
@@ -520,7 +525,7 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
   });
 
   return (
-    <group ref={groupRef} position={[0, -1, 0]}>
+    <group ref={groupRef} position={[0, -1, 0]} scale={[0.6, 0.6, 0.6]}>
         <EffectComposer enableNormalPass={false} multisampling={0}>
            {/* Optimize: Higher threshold to bloom only very bright parts, lower resolution radius */}
            <Bloom luminanceThreshold={0.5} intensity={0.5} radius={0.4} levels={2} />
@@ -566,4 +571,4 @@ const HolographicFactory: React.FC<HolographicFactoryProps> = ({ handTrackingRef
 
 export default HolographicFactory;
 
-useGLTF.preload('/models/ironman.glb');
+// useGLTF.preload('/models/ironman.glb');
