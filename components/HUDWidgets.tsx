@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { SystemLoadChart } from './HolographicCharts';
+// import { SystemLoadChart } from './HolographicCharts';
 
 // Isolated component for time display to prevent re-renders of parent
 export const TimeWidget = memo(() => {
@@ -23,25 +23,25 @@ export const TimeWidget = memo(() => {
 });
 
 // Isolated component for Hex Dump to prevent re-renders of parent
-export const HexDumpWidget = memo(() => {
-    const [hexDump, setHexDump] = useState<string[]>([]);
+// export const HexDumpWidget = memo(() => {
+//     const [hexDump, setHexDump] = useState<string[]>([]);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const chars = '0123456789ABCDEF';
-            const line = '0x' + Array(8).fill(0).map(() => chars[Math.floor(Math.random() * 16)]).join('');
-            setHexDump(prev => [line, ...prev.slice(0, 4)]);
-        }, 200); // Reduced from 80ms to 200ms
+//     useEffect(() => {
+//         const interval = setInterval(() => {
+//             const chars = '0123456789ABCDEF';
+//             const line = '0x' + Array(8).fill(0).map(() => chars[Math.floor(Math.random() * 16)]).join('');
+//             setHexDump(prev => [line, ...prev.slice(0, 4)]);
+//         }, 200); // Reduced from 80ms to 200ms
 
-        return () => clearInterval(interval);
-    }, []);
+//         return () => clearInterval(interval);
+//     }, []);
 
-    return (
-        <div className="absolute top-8 left-8 z-30 flex flex-col gap-2 w-64 h-32 animate-slide-in-left">
-            <SystemLoadChart />
-            <div className="font-mono text-[10px] text-klein-blue opacity-60 leading-tight h-12 overflow-hidden mt-1">
-                {hexDump.map((line, i) => <div key={i}>{line}</div>)}
-            </div>
-        </div>
-    );
-});
+//     return (
+//         <div className="absolute top-8 left-8 z-30 flex flex-col gap-2 w-64 h-32 animate-slide-in-left">
+//             <SystemLoadChart />
+//             <div className="font-mono text-[10px] text-klein-blue opacity-60 leading-tight h-12 overflow-hidden mt-1">
+//                 {hexDump.map((line, i) => <div key={i}>{line}</div>)}
+//             </div>
+//         </div>
+//     );
+// });

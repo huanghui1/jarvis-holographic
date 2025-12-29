@@ -3,7 +3,8 @@ import React, { useRef, useState, useCallback, Suspense, useEffect } from 'react
 import { Canvas } from '@react-three/fiber';
 import { Perf } from 'r3f-perf';
 import VideoFeed from './components/VideoFeed';
-import HolographicFactory from './components/HolographicFactory';
+// import HolographicFactory from './components/HolographicFactory';
+import FactoryScene from './components/FactoryScene';
 import HUDOverlay from './components/HUDOverlay';
 import JarvisIntro from './components/JarvisIntro';
 import { WorkshopDetailModal } from './components/WorkshopDetailModal';
@@ -121,20 +122,15 @@ const App: React.FC = () => {
       <VideoFeed onTrackingUpdate={handleTrackingUpdate} />
 
       {/* 2. 3D Scene Layer (Earth) */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
+      <div className="absolute inset-0 z-10">
         <Canvas 
-            camera={{ position: [0, 0, 6], fov: 45 }} 
-            gl={{ alpha: true, antialias: false }}
+            camera={{ position: [0, 5, 15], fov: 45 }} 
+            gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true }}
             dpr={[1, 1.5]}
         >
               <Perf position="top-left" />
               <Suspense fallback={null}>
-                 <HolographicFactory 
-                    handTrackingRef={handTrackingRef} 
-                    setRegion={setCurrentRegion} 
-                    onWorkshopClick={handleWorkshopClick}
-                    isModalOpen={detailModalOpen}
-                 />
+                 <FactoryScene />
               </Suspense>
           </Canvas>
       </div>
@@ -143,8 +139,6 @@ const App: React.FC = () => {
       <HUDOverlay 
         handTrackingRef={handTrackingRef} 
         currentRegion={currentRegion}
-        isModalOpen={detailModalOpen}
-        onCloseModal={() => setDetailModalOpen(false)}
       />
       
       {/* 4. Overlay Modals */}

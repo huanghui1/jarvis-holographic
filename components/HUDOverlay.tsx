@@ -2,6 +2,9 @@ import React, { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { HandTrackingState, RegionName } from '../types';
 import { SoundService } from '../services/soundService';
+import { SystemLoadChart, EnergyChart } from './HolographicCharts';
+import { HolographicTable } from './HolographicTable';
+import { TimeWidget } from './HUDWidgets';
 
 interface HUDOverlayProps {
   handTrackingRef: React.MutableRefObject<HandTrackingState>;
@@ -10,9 +13,6 @@ interface HUDOverlayProps {
   onCloseModal?: () => void;
 }
 
-import { SystemLoadChart, EnergyChart } from './HolographicCharts';
-import { HolographicTable } from './HolographicTable';
-import { TimeWidget, HexDumpWidget } from './HUDWidgets';
 
 // --- Sub-Components for Static HUD Elements ---
 
@@ -30,31 +30,31 @@ const CircularGauge = React.memo(({ label, value, color = "text-holo-cyan" }: { 
   </div>
 ));
 
-const FileTreeWidget = React.memo(() => (
-  <div className="flex flex-col gap-1 text-xs font-mono text-holo-cyan opacity-80 mt-4 border-l-2 border-holo-cyan/30 pl-3 py-2 relative">
-    {/* Decorator Line Dots */}
-    <div className="absolute -left-[5px] top-0 w-2 h-2 bg-holo-cyan rounded-full"></div>
-    <div className="absolute -left-[5px] bottom-0 w-2 h-2 bg-holo-cyan rounded-full"></div>
+// const FileTreeWidget = React.memo(() => (
+//   <div className="flex flex-col gap-1 text-xs font-mono text-holo-cyan opacity-80 mt-4 border-l-2 border-holo-cyan/30 pl-3 py-2 relative">
+//     {/* Decorator Line Dots */}
+//     <div className="absolute -left-[5px] top-0 w-2 h-2 bg-holo-cyan rounded-full"></div>
+//     <div className="absolute -left-[5px] bottom-0 w-2 h-2 bg-holo-cyan rounded-full"></div>
     
-    <div className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
-      <span className="w-1.5 h-1.5 bg-holo-cyan rounded-full"></span>
-      <span>RainMeter</span>
-    </div>
-    <div className="flex items-center gap-2 pl-4 cursor-pointer hover:text-white transition-colors">
-       <span className="text-[8px]">▶</span> Resources
-    </div>
-    <div className="flex items-center gap-2 pl-8 cursor-pointer hover:text-white transition-colors">
-       <span className="text-[8px]">▶</span> Browser
-    </div>
-    <div className="flex items-center gap-2 pl-8 cursor-pointer hover:text-white transition-colors">
-       <span className="text-[8px]">▶</span> Themes
-    </div>
-    <div className="flex items-center gap-2 mt-2 cursor-pointer hover:text-white transition-colors">
-      <span className="w-1.5 h-1.5 bg-alert-red rounded-full animate-pulse"></span>
-      <span className="text-alert-red">Emergency</span>
-    </div>
-  </div>
-));
+//     <div className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
+//       <span className="w-1.5 h-1.5 bg-holo-cyan rounded-full"></span>
+//       <span>RainMeter</span>
+//     </div>
+//     <div className="flex items-center gap-2 pl-4 cursor-pointer hover:text-white transition-colors">
+//        <span className="text-[8px]">▶</span> Resources
+//     </div>
+//     <div className="flex items-center gap-2 pl-8 cursor-pointer hover:text-white transition-colors">
+//        <span className="text-[8px]">▶</span> Browser
+//     </div>
+//     <div className="flex items-center gap-2 pl-8 cursor-pointer hover:text-white transition-colors">
+//        <span className="text-[8px]">▶</span> Themes
+//     </div>
+//     <div className="flex items-center gap-2 mt-2 cursor-pointer hover:text-white transition-colors">
+//       <span className="w-1.5 h-1.5 bg-alert-red rounded-full animate-pulse"></span>
+//       <span className="text-alert-red">Emergency</span>
+//     </div>
+//   </div>
+// ));
 
 const VisualsFrame = React.memo(() => (
   <div className="relative w-48 border border-holo-cyan/40 p-1 bg-black/20 backdrop-blur-sm">
@@ -92,19 +92,19 @@ const ArcReactorWidget = React.memo(() => (
   </div>
 ));
 
-const FeedList = React.memo(() => {
-    const items = ["gmail", "wikipedia", "da-rainmeter", "lifehacker", "gizmodo", "kotaku", "twitter"];
-    return (
-        <div className="text-right space-y-1">
-            {items.map((item, i) => (
-                <div key={item} className="flex items-center justify-end gap-2 text-[10px] font-mono text-holo-cyan/70 hover:text-holo-cyan hover:scale-105 transition-all cursor-pointer group">
-                    <span className="uppercase tracking-wider">{item}</span>
-                    <div className={`w-1.5 h-1.5 rounded-full ${i % 2 === 0 ? 'bg-holo-cyan shadow-[0_0_5px_#00F0FF]' : 'bg-gray-600 group-hover:bg-holo-cyan'}`}></div>
-                </div>
-            ))}
-        </div>
-    )
-});
+// const FeedList = React.memo(() => {
+//     const items = ["gmail", "wikipedia", "da-rainmeter", "lifehacker", "gizmodo", "kotaku", "twitter"];
+//     return (
+//         <div className="text-right space-y-1">
+//             {items.map((item, i) => (
+//                 <div key={item} className="flex items-center justify-end gap-2 text-[10px] font-mono text-holo-cyan/70 hover:text-holo-cyan hover:scale-105 transition-all cursor-pointer group">
+//                     <span className="uppercase tracking-wider">{item}</span>
+//                     <div className={`w-1.5 h-1.5 rounded-full ${i % 2 === 0 ? 'bg-holo-cyan shadow-[0_0_5px_#00F0FF]' : 'bg-gray-600 group-hover:bg-holo-cyan'}`}></div>
+//                 </div>
+//             ))}
+//         </div>
+//     )
+// });
 
 
 const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion, isModalOpen, onCloseModal }) => {
@@ -419,7 +419,7 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion,
       {/* --- TOP HEADER --- */}
       
       {/* Top Left: System Load Chart (Isolated) */}
-      <HexDumpWidget />
+      {/* <HexDumpWidget /> */}
 
       {/* Top Right: Title & Clock */}
       <div className="absolute top-8 right-8 z-30 text-right">
@@ -446,7 +446,7 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion,
       {/* Left Panel 2: File Explorer (Bottom Left) */}
       <div className="absolute bottom-32 left-8 z-30">
            <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Directory</div>
-           <FileTreeWidget />
+           {/* <FileTreeWidget /> */}
            
            {/* Status Widget below tree */}
            <div className="mt-8 bg-black/60 border-t border-l border-holo-blue p-4 rounded-tr-xl backdrop-blur-md w-64 relative">
@@ -490,13 +490,13 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef, currentRegion,
       </div>
 
       {/* Right Panel 3: Data Feed (Bottom Right) */}
-      <div className="absolute bottom-32 right-8 z-30 flex flex-col items-end gap-2">
+      {/* <div className="absolute bottom-32 right-8 z-30 flex flex-col items-end gap-2">
            <div className="text-[10px] uppercase tracking-widest text-holo-blue border-b-2 border-holo-blue/30 pb-1 mb-2 pr-4">Communication Feed</div>
            <FeedList />
            <div className="mt-4 w-48 h-1 bg-gray-800 rounded overflow-hidden">
                 <div className="h-full bg-holo-cyan/50 animate-pulse w-[60%]"></div>
            </div>
-      </div>
+      </div> */}
 
       {/* --- INTERACTIVE FLOATING PANEL (PINCH) --- */}
       {/* Removed conditional rendering to avoid re-renders. Controlled via opacity/pointer-events. */}
