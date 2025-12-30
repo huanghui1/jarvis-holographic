@@ -87,23 +87,53 @@ const FACTORY_LAYOUT: ModelConfig[] = [
   },
   
   // Pallets nearby
-  // { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-22, 0, 0], scale: SCALE },
-  // { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-22, 0.15, 0], rotation: [0, 0.5, 0], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [9, 0, 8], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [9, 0, 9], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [10, 0, 8], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [10, 0, 9], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [11, 0, 8], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [11, 0, 9], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [12, 0, 8], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [12, 0, 9], scale: SCALE },
+
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [9, 0, 12], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [9, 0, 13], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [10, 0, 12], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [10, 0, 13], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [11, 0, 12], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [11, 0, 13], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [12, 0, 12], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [12, 0, 13], scale: SCALE },
+
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [9, 0, 16], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [9, 0, 17], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [10, 0, 16], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [10, 0, 17], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [11, 0, 16], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [11, 0, 17], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [12, 0, 16], scale: SCALE },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [12, 0, 17], scale: SCALE },
 
   // --- Machining Center (Right Side) ---
   // Vertical CNCs arranged in rows
-  // { file: '立式CNC.glb', position: [20, 0, -15], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'V-CNC 1' },
-  // { file: '立式CNC.glb', position: [20, 0, -10], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'V-CNC 2' },
-  // { file: '中型cnc装配体.glb', position: [25, 0, -15], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'M-CNC 1' },
+  { file: '立式CNC.glb', position: [31.8, 0, -14.5], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'V-CNC 1' },
+  { file: '立式CNC.glb', position: [31.8, 0, -9], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'V-CNC 2' },
+  { file: '立式CNC.glb', position: [31.8, 0, -2.5], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'V-CNC 2' },
+  { file: '立式CNC.glb', position: [31.8, 0, 3], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'V-CNC 2' },
+  { file: '立式CNC.glb', position: [31.8, 0, 8.5], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'V-CNC 2' },
+
+  { file: '中型cnc装配体.glb', position: [0, 1, -15], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'M-CNC 1' },
   // { file: 'zn20109a.0000000_立式加工中心ga-v918c.glb', position: [25, 0, -5], rotation: [0, -Math.PI / 2, 0], scale: SCALE, label: 'GA-V918C' },
 
   // Lathes area
   { file: '小车床-0632.glb', position: [-17, 0, -24.8], rotation: [0, Math.PI, 0], scale: SCALE, label: 'Lathe S' },
   { file: '小车床-0632.glb', position: [-20, 0, -24.8], rotation: [0, Math.PI, 0], scale: SCALE, label: 'Lathe S' },
-  // { file: '数控车床sy-双轴车床装配体.glb', position: [20, 0, 10], rotation: [0, Math.PI, 0], scale: SCALE, label: 'Lathe Dual' },
+  { file: '数控车床sy-双轴车床装配体.glb', position: [0, 2.5, -10], rotation: [0, Math.PI, 0], scale: SCALE, label: 'Lathe Dual' },
 
   // Drilling area
-  // { file: '全自动钻床.glb', position: [0, 0, 20], rotation: [0, Math.PI, 0], scale: SCALE, label: 'Auto Drill' },
+  { file: '全自动钻床.glb', position: [-24, 0.9, -25], rotation: [0, Math.PI, 0], scale: SCALE, label: 'Auto Drill' },
+  { file: '全自动钻床.glb', position: [-26.4, 0.9, -25], rotation: [0, Math.PI, 0], scale: SCALE, label: 'Auto Drill' },
+
   { file: '大型钻攻中心.glb', position: [0, -2.5, -1], rotation: [0, Math.PI, 0], scale: SCALE * 2, label: 'Drill Center' },
 
   // --- Central Heavy Machinery ---
@@ -144,13 +174,14 @@ const FACTORY_LAYOUT: ModelConfig[] = [
   { file: '办公桌-sus02-00工作台装配.glb', rotation: [Math.PI / 2, 0, Math.PI], position: [18.2, 0.8, -21.8], scale: SCALE, label: 'Station 2' },
   { file: '办公桌-sus02-00工作台装配.glb', rotation: [Math.PI / 2, 0, Math.PI], position: [17, 0.8, -21.8], scale: SCALE, label: 'Station 2' },
 
-  // { file: 'dk-机架装配.glb', position: [-25, -6.9, 15], rotation: [(Math.PI / 2) * 3, 0, Math.PI / 2], scale: SCALE, label: 'Rack Assy' },
+  { file: 'dk-机架装配.glb', position: [20.4, -4, -2], rotation: [(Math.PI / 2) * 3, 0, Math.PI], scale: SCALE, label: 'Rack Assy' },
+  { file: 'dk-机架装配.glb', position: [20.4, -4, -6], rotation: [(Math.PI / 2) * 3, 0, Math.PI], scale: SCALE, label: 'Rack Assy' },
 
   { file: '台面1700-3400.glb', position: [-18, 0.8, 5.8], scale: SCALE, label: 'Table L' },
   { file: '台面1700-3400.glb', position: [-22, 0.8, 5.8], scale: SCALE, label: 'Table L' },
 
   // Inspection
-  // { file: 's三坐标机.glb', position: [5, 0, 15], rotation: [0, -Math.PI / 4, 0], scale: SCALE, label: 'CMM' },
+  // { file: 's三坐标机.glb', position: [5, 8, 15], rotation: [0, -Math.PI / 4, 0], scale: SCALE, label: 'CMM' },
   // { file: '研磨机220.glb', position: [10, 0, 15], scale: SCALE, label: 'Grinder' },
 
   // --- Logistics ---
