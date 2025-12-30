@@ -2,6 +2,7 @@
 import React, { useRef, useState, useCallback, Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Perf } from 'r3f-perf';
+import { Loader } from '@react-three/drei';
 import VideoFeed from './components/VideoFeed';
 // import HolographicFactory from './components/HolographicFactory';
 import FactoryScene from './components/FactoryScene';
@@ -146,6 +147,32 @@ const App: React.FC = () => {
          isOpen={detailModalOpen} 
          onClose={() => setDetailModalOpen(false)} 
          workshopName={selectedWorkshop}
+      />
+
+      <Loader
+        containerStyles={{
+          background: 'black',
+          zIndex: 1000,
+        }}
+        innerStyles={{
+          backgroundColor: 'rgba(0, 240, 255, 0.1)',
+          width: '300px',
+          height: '2px',
+        }}
+        barStyles={{
+          backgroundColor: '#00F0FF',
+          height: '100%',
+          boxShadow: '0 0 10px #00F0FF, 0 0 20px #00F0FF',
+        }}
+        dataStyles={{
+          color: '#00F0FF',
+          fontSize: '12px',
+          fontFamily: 'monospace',
+          textShadow: '0 0 5px #00F0FF',
+          marginTop: '10px',
+          fontWeight: 600
+        }}
+        dataInterpolation={(p) => `SYSTEM LOADING... ${p.toFixed(0)}%`}
       />
     </div>
   );
