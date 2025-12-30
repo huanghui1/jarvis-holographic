@@ -2,7 +2,7 @@
 import React, { useRef, useState, useCallback, Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Perf } from 'r3f-perf';
-import { Loader } from '@react-three/drei';
+import { useProgress } from '@react-three/drei';
 import VideoFeed from './components/VideoFeed';
 // import HolographicFactory from './components/HolographicFactory';
 import FactoryScene from './components/FactoryScene';
@@ -27,6 +27,8 @@ const App: React.FC = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null);
 
+  const { progress } = useProgress();
+
   const handleTrackingUpdate = useCallback((newState: HandTrackingState) => {
     handTrackingRef.current = newState;
   }, []);
@@ -43,29 +45,69 @@ const App: React.FC = () => {
     SoundService.playBlip(); // Immediate feedback
     SoundService.playBootSequence();
     
-    // Staggered animation state for loading bars
-    setBootStep(1); // Initialize
-    setTimeout(() => setBootStep(2), 800); // Loading Modules
-    setTimeout(() => setBootStep(3), 1800); // Authentication
-    
-    // After text logs, show Jarvis Intro
-    setTimeout(() => {
-        setIntroActive(true);
-        SoundService.speak("你好，欢迎来到无锡奥达工业");
-        
-        // After Intro, show main app
-        setTimeout(() => {
-             setIntroActive(false);
-             setBooted(true);
-             SoundService.playAmbientHum();
-        }, 3500); // Intro duration
-    }, 2500); // Boot text logs duration
+    // Start boot sequence
+    setBootStep(1); 
   };
 
-  // Render Boot Screen
-  if (!booted && !introActive) {
-      return (
-          <div className="relative w-full h-screen bg-black text-holo-cyan font-mono flex flex-col items-center justify-center overflow-hidden">
+  // Watch for loading progress to advance boot step
+  useEffect(() => {
+    if (bootStep === 1 && progress >= 100) {
+        // Models loaded, advance to next steps
+        setTimeout(() => setBootStep(2), 500); // Brief pause before next step
+        setTimeout(() => setBootStep(3), 1500); // Authentication
+        
+        // After text logs, show Jarvis Intro
+        setTimeout(() => {
+            setIntroActive(true);
+            SoundService.speak("你好，欢迎来到无锡奥达工业");
+            
+            // After Intro, show main app
+            setTimeout(() => {
+                 setIntroActive(false);
+                 setBooted(true);
+                 SoundService.playAmbientHum();
+            }, 3500); // Intro duration
+        }, 2200); // Boot text logs duration
+    }
+  }, [bootStep, progress]);
+
+  return (
+    <div className="relative w-full h-screen bg-black overflow-hidden animate-flash">
+      {/* 1. Background Camera Layer */}
+      <VideoFeed onTrackingUpdate={handleTrackingUpdate} />
+
+      {/* 2. 3D Scene Layer (Earth) - Always rendered to ensure loading starts */}
+      <div className="absolute inset-0 z-10">
+        <Canvas 
+            camera={{ position: [0, 5, 15], fov: 45 }} 
+            gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true }}
+            dpr={[1, 1.5]}
+        >
+              <Perf position="top-left" />
+              <Suspense fallback={null}>
+                 <FactoryScene />
+              </Suspense>
+          </Canvas>
+      </div>
+
+      {/* 3. UI/HUD Layer - Only visible when booted */}
+      {booted && !introActive && (
+          <HUDOverlay 
+            handTrackingRef={handTrackingRef} 
+            currentRegion={currentRegion}
+          />
+      )}
+      
+      {/* 4. Overlay Modals */}
+      <WorkshopDetailModal 
+         isOpen={detailModalOpen} 
+         onClose={() => setDetailModalOpen(false)} 
+         workshopName={selectedWorkshop}
+      />
+
+      {/* 5. Boot Screen Overlay */}
+      {!booted && !introActive && (
+          <div className="absolute inset-0 z-50 bg-black text-holo-cyan font-mono flex flex-col items-center justify-center overflow-hidden">
               <div className="scanlines opacity-20"></div>
               
               {/* Background geometric elements */}
@@ -91,13 +133,14 @@ const App: React.FC = () => {
                       </div>
                       <div className="w-full h-1 bg-gray-800 rounded overflow-hidden">
                           <div 
-                            className="h-full bg-holo-cyan shadow-[0_0_10px_#00F0FF] transition-all duration-1000 ease-out"
-                            style={{ width: bootStep === 1 ? '10%' : bootStep === 2 ? '60%' : '100%' }}
+                            className="h-full bg-holo-cyan shadow-[0_0_10px_#00F0FF] transition-all duration-300 ease-out"
+                            style={{ width: bootStep === 1 ? `${progress}%` : bootStep === 2 ? '60%' : '100%' }}
                           ></div>
                       </div>
                       <div className="text-xs text-gray-500 h-20 overflow-hidden w-full text-center leading-tight">
                           {bootStep >= 1 && <div> 内存分配检查... 完成</div>}
-                          {bootStep >= 1 && <div> GPU 委托... 已分配</div>}
+                          {bootStep === 1 && <div className="text-holo-cyan"> 模型资源加载: {progress.toFixed(0)}%</div>}
+                          {bootStep >= 1 && progress >= 100 && <div> GPU 委托... 已分配</div>}
                           {bootStep >= 2 && <div> 加载 MEDIA_PIPE.WASM...</div>}
                           {bootStep >= 2 && <div> 连接卫星信号...</div>}
                           {bootStep >= 3 && <div> 视网膜扫描... 已绕过</div>}
@@ -108,72 +151,15 @@ const App: React.FC = () => {
               
               <div className="absolute bottom-8 text-[10px] text-gray-600">奥达工业 专有技术</div>
           </div>
-      )
-  }
+      )}
 
-  // Render Intro Screen
-  if (introActive) {
-      return <JarvisIntro />;
-  }
+      {/* 6. Intro Screen Overlay */}
+      {introActive && (
+          <div className="absolute inset-0 z-50 bg-black">
+             <JarvisIntro />
+          </div>
+      )}
 
-  // Render Main App
-  return (
-    <div className="relative w-full h-screen bg-black overflow-hidden animate-flash">
-      {/* 1. Background Camera Layer */}
-      <VideoFeed onTrackingUpdate={handleTrackingUpdate} />
-
-      {/* 2. 3D Scene Layer (Earth) */}
-      <div className="absolute inset-0 z-10">
-        <Canvas 
-            camera={{ position: [0, 5, 15], fov: 45 }} 
-            gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true }}
-            dpr={[1, 1.5]}
-        >
-              <Perf position="top-left" />
-              <Suspense fallback={null}>
-                 <FactoryScene />
-              </Suspense>
-          </Canvas>
-      </div>
-
-      {/* 3. UI/HUD Layer */}
-      <HUDOverlay 
-        handTrackingRef={handTrackingRef} 
-        currentRegion={currentRegion}
-      />
-      
-      {/* 4. Overlay Modals */}
-      <WorkshopDetailModal 
-         isOpen={detailModalOpen} 
-         onClose={() => setDetailModalOpen(false)} 
-         workshopName={selectedWorkshop}
-      />
-
-      <Loader
-        containerStyles={{
-          background: 'black',
-          zIndex: 1000,
-        }}
-        innerStyles={{
-          backgroundColor: 'rgba(0, 240, 255, 0.1)',
-          width: '300px',
-          height: '2px',
-        }}
-        barStyles={{
-          backgroundColor: '#00F0FF',
-          height: '100%',
-          boxShadow: '0 0 10px #00F0FF, 0 0 20px #00F0FF',
-        }}
-        dataStyles={{
-          color: '#00F0FF',
-          fontSize: '12px',
-          fontFamily: 'monospace',
-          textShadow: '0 0 5px #00F0FF',
-          marginTop: '10px',
-          fontWeight: 600
-        }}
-        dataInterpolation={(p) => `SYSTEM LOADING... ${p.toFixed(0)}%`}
-      />
     </div>
   );
 };
