@@ -71,6 +71,8 @@ const App: React.FC = () => {
     }
   }, [bootStep, progress]);
 
+  const isElectron = /Electron/.test(navigator.userAgent);
+
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden animate-flash">
       {/* 1. Background Camera Layer */}
@@ -80,8 +82,8 @@ const App: React.FC = () => {
       <div className="absolute inset-0 z-10">
         <Canvas 
             camera={{ position: [0, 5, 15], fov: 45 }} 
-            gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true }}
-            dpr={[1, 1.5]}
+            gl={{ alpha: true, antialias: !isElectron, logarithmicDepthBuffer: true }}
+            dpr={isElectron ? 1 : [1, 1.5]}
         >
               <Perf position="top-left" />
               <Suspense fallback={null}>

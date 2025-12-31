@@ -174,8 +174,13 @@ const FACTORY_LAYOUT: ModelConfig[] = [
   { file: '办公桌-sus02-00工作台装配.glb', rotation: [Math.PI / 2, 0, Math.PI], position: [18.2, 0.8, -21.8], scale: SCALE, label: 'Station 2' },
   { file: '办公桌-sus02-00工作台装配.glb', rotation: [Math.PI / 2, 0, Math.PI], position: [17, 0.8, -21.8], scale: SCALE, label: 'Station 2' },
 
-  { file: 'dk-机架装配.glb', position: [20.4, -4, -2], rotation: [(Math.PI / 2) * 3, 0, Math.PI], scale: SCALE, label: 'Rack Assy' },
-  { file: 'dk-机架装配.glb', position: [20.4, -4, -6], rotation: [(Math.PI / 2) * 3, 0, Math.PI], scale: SCALE, label: 'Rack Assy' },
+  { file: 'zn20109a.0000000_立式加工中心ga-v918c.glb', position: [20.4, 2, -8.3], scale: SCALE, label: 'Rack Assy' },
+  { file: 'zn20109a.0000000_立式加工中心ga-v918c.glb', position: [20.4, 2, -13.3], scale: SCALE, label: 'Rack Assy' },
+
+  { file: '数控车床sy-双轴车床装配体.glb', position: [20.4, 2, -12.9], scale: SCALE, label: 'Rack Assy' },
+  { file: '数控车床sy-双轴车床装配体.glb', position: [20.4, 2, -16.3], scale: SCALE, label: 'Rack Assy' },
+  
+  // { file: 'dk-机架装配.glb', position: [20.4, -4, -6], rotation: [(Math.PI / 2) * 3, 0, Math.PI], scale: SCALE, label: 'Rack Assy' },
 
   { file: '台面1700-3400.glb', position: [-18, 0.8, 5.8], scale: SCALE, label: 'Table L' },
   { file: '台面1700-3400.glb', position: [-22, 0.8, 5.8], scale: SCALE, label: 'Table L' },
