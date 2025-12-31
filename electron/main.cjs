@@ -2,17 +2,21 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 
-// Hardware acceleration is crucial for 3D performance
-app.commandLine.appendSwitch('enable-webgl');
-app.commandLine.appendSwitch('ignore-gpu-blacklist');
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('disable-gpu-driver-bug-workarounds');
-app.commandLine.appendSwitch('enable-accelerated-2d-canvas');
+// --- GPU CONFIGURATION STRATEGY ---
+// We remove aggressive flags because they often cause Chromium to fallback to software rendering
+// when it detects "unsafe" or "forced" configurations that conflict with the driver.
+
+// Instead, we trust the default GPU process but disable specific throttling features.
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
-// Force high performance GPU on dual-GPU systems (MacBook Pro)
-app.commandLine.appendSwitch('force_high_performance_gpu');
+
+// Explicitly tell Chromium NOT to block the GPU
+app.commandLine.appendSwitch('ignore-gpu-blocklist'); 
+app.commandLine.appendSwitch('enable-gpu-rasterization'); 
+app.commandLine.appendSwitch('enable-zero-copy');
+
+// Do NOT use 'disable-gpu-driver-bug-workarounds' as it is often the culprit for software fallback on macOS
+// Do NOT use 'enable-webgl' explicitly as it's on by default, and forcing it might sometimes conflict
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -24,7 +28,8 @@ function createWindow() {
       contextIsolation: false,
       webSecurity: false,
       backgroundThrottling: false,
-      zoomFactor: 1.0, // Ensure zoom is 1.0
+      zoomFactor: 1.0,
+      offscreen: false,
     },
   });
 
@@ -39,7 +44,10 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  console.log('GPU Feature Status:', app.getGPUFeatureStatus());
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

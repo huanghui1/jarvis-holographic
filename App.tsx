@@ -82,10 +82,10 @@ const App: React.FC = () => {
       <div className="absolute inset-0 z-10">
         <Canvas 
             camera={{ position: [0, 5, 15], fov: 45 }} 
-            gl={{ alpha: true, antialias: !isElectron, logarithmicDepthBuffer: true }}
-            dpr={isElectron ? 1 : [1, 1.5]}
+            gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true }}
+            dpr={[1, 1.5]}
         >
-              <Perf position="top-left" />
+              <Perf position="top-left" deepAnalyze={true} />
               <Suspense fallback={null}>
                  <FactoryScene />
               </Suspense>
