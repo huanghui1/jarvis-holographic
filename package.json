@@ -28,7 +28,9 @@
       "identity": null
     },
     "win": {
-      "target": "nsis"
+      "target": "portable",
+      "signAndEditExecutable": false,
+      "forceCodeSigning": false
     },
     "linux": {
       "target": "AppImage"
