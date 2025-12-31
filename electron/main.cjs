@@ -40,7 +40,15 @@ function createWindow() {
     win.loadURL('http://localhost:3000');
     win.webContents.openDevTools();
   } else {
-    win.loadFile(path.join(__dirname, '../dist/index.html'));
+    // In production, we need to be careful with paths
+    // On Windows, the path might need proper handling
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    win.loadFile(indexPath).catch(e => {
+        console.error('Failed to load index.html:', e);
+    });
+    
+    // Temporarily open DevTools in production to debug the blank screen
+    // win.webContents.openDevTools(); 
   }
 }
 

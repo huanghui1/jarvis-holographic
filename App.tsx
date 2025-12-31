@@ -73,6 +73,9 @@ const App: React.FC = () => {
 
   const isElectron = /Electron/.test(navigator.userAgent);
 
+  // If using file:// protocol (Electron production), ensure paths are relative or use HashRouter if we were using routing.
+  // Since this is a single page app without router, we just need to ensure assets are loaded correctly.
+  
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden animate-flash">
       {/* 1. Background Camera Layer */}
