@@ -39,44 +39,50 @@ const FACTORY_LAYOUT: ModelConfig[] = [
 
   // --- Storage Area (Left Side) ---
   // Rows of heavy duty shelves
-  { file: '1000-2000-重型货架.glb', position: [-18, 1.8, -17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
-  { file: '1000-2000-重型货架.glb', position: [-18, 1.8, -12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
-  { file: '1000-2850-重型货架.glb', position: [-18, 1.8, -7], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
-  { file: '1000-2850-重型货架.glb', position: [-18, 1.8, -2], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
+  { file: '1000-2000-重型货架.glb', position: [-18, 3.5, -17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+  { file: '1000-2000-重型货架.glb', position: [-18, 3.5, -12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-2850-重型货架.glb', position: [-18, 3.5, -7], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
+  { file: '1000-2850-重型货架.glb', position: [-18, 3.5, -2], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
 
-  { file: '1000-2000-重型货架.glb', position: [-14, 1.8, -17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
-  { file: '1000-2000-重型货架.glb', position: [-14, 1.8, -12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
-  { file: '1000-2850-重型货架.glb', position: [-14, 1.8, -7], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
-  { file: '1000-2850-重型货架.glb', position: [-14, 1.8, -2], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
+  { file: '1000-2000-重型货架.glb', position: [-14, 3.5, -17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+  { file: '1000-2000-重型货架.glb', position: [-14, 3.5, -12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-2850-重型货架.glb', position: [-14, 3.5, -7], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
+  { file: '1000-2850-重型货架.glb', position: [-14, 3.5, -2], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
 
-  { file: '1000-2000-重型货架.glb', position: [-21.8, 1.8, -17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
-  { file: '1000-2000-重型货架.glb', position: [-21.8, 1.8, -12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
-  { file: '1000-2850-重型货架.glb', position: [-21.8, 1.8, -7], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
-  { file: '1000-2850-重型货架.glb', position: [-21.8, 1.8, -2], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
+  { file: '1000-2000-重型货架.glb', position: [-21.8, 3.5, -17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+  { file: '1000-2000-重型货架.glb', position: [-21.8, 3.5, -12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-2850-重型货架.glb', position: [-21.8, 3.5, -7], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
+  { file: '1000-2850-重型货架.glb', position: [-21.8, 3.5, -2], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
 
-  { file: '1000-2000-重型货架.glb', position: [-35.8, 1.8, -17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
-  { file: '1000-2000-重型货架.glb', position: [-35.8, 1.8, -12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
-  { file: '1000-2850-重型货架.glb', position: [-35.8, 1.8, -7], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
-  { file: '1000-2850-重型货架.glb', position: [-35.8, 1.8, -2], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
+  { file: '1000-2000-重型货架.glb', position: [-35.8, 3.5, -17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+  { file: '1000-2000-重型货架.glb', position: [-35.8, 3.5, -12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-2850-重型货架.glb', position: [-35.8, 3.5, -7], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
+  { file: '1000-2850-重型货架.glb', position: [-35.8, 3.5, -2], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
 
-  { file: '1000-2000-重型货架.glb', position: [-35.8, 1.8, 4], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
-  { file: '1000-2000-重型货架.glb', position: [-35.8, 1.8, 8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
-  { file: '1000-2850-重型货架.glb', position: [-35.8, 1.8, 12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
-  { file: '1000-2850-重型货架.glb', position: [-35.8, 1.8, 17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
+  { file: '1000-2000-重型货架.glb', position: [-35.8, 3.5, 4], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+  { file: '1000-2000-重型货架.glb', position: [-35.8, 3.5, 8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-2850-重型货架.glb', position: [-35.8, 3.5, 12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
+  { file: '1000-2850-重型货架.glb', position: [-35.8, 3.5, 17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
 
-  { file: '1000-2000-重型货架.glb', position: [-30.8, 1.8, 10], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
-  { file: '1000-2000-重型货架.glb', position: [-30.8, 1.8, 13], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
-  { file: '1000-2000-重型货架.glb', position: [-30.8, 1.8, 16], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 8.6], scale: SCALE, label: 'Shelf A1' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 9.6], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 10.6], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 11.6], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 12.6], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 14.6], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 15.6], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 16.6], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-1000-1000-1100-115-1.0川字托盘.glb', position: [-24, 0.1, 17.6], scale: SCALE, label: 'Shelf A2' },
 
-  { file: '1000-2000-重型货架.glb', position: [-20.8, 1.8, 4], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
-  { file: '1000-2000-重型货架.glb', position: [-20.8, 1.8, 8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
-  { file: '1000-2850-重型货架.glb', position: [-20.8, 1.8, 12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
-  { file: '1000-2850-重型货架.glb', position: [-20.8, 1.8, 17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
+  { file: '1000-2000-重型货架.glb', position: [-20.8, 3.5, 4], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+  { file: '1000-2000-重型货架.glb', position: [-20.8, 3.5, 8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-2850-重型货架.glb', position: [-20.8, 3.5, 12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
+  { file: '1000-2850-重型货架.glb', position: [-20.8, 3.5, 17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
 
-  { file: '1000-2000-重型货架.glb', position: [-14.8, 1.8, 4], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
-  { file: '1000-2000-重型货架.glb', position: [-14.8, 1.8, 8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
-  { file: '1000-2850-重型货架.glb', position: [-14.8, 1.8, 12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
-  { file: '1000-2850-重型货架.glb', position: [-14.8, 1.8, 17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
+  { file: '1000-2000-重型货架.glb', position: [-14.8, 3.5, 4], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+  { file: '1000-2000-重型货架.glb', position: [-14.8, 3.5, 8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A2' },
+  { file: '1000-2850-重型货架.glb', position: [-14.8, 3.5, 12], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B1' },
+  { file: '1000-2850-重型货架.glb', position: [-14.8, 3.5, 17], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf B2' },
 
   { 
     file: '600-1500-货架装配体.glb', 
@@ -186,12 +192,17 @@ const FACTORY_LAYOUT: ModelConfig[] = [
   { file: '台面1700-3400.glb', position: [-22, 0.8, 5.8], scale: SCALE, label: 'Table L' },
 
   // Inspection
-  // { file: 's三坐标机.glb', position: [5, 8, 15], rotation: [0, -Math.PI / 4, 0], scale: SCALE, label: 'CMM' },
+  { file: 's三坐标机.glb', position: [-2.8, 0, 5.2], scale: SCALE, label: 'CMM' },
+  { file: 's三坐标机.glb', position: [-2.8, 0, 8], scale: SCALE, label: 'CMM' },
+  { file: 's三坐标机.glb', position: [-2.8, 0, 10.8], scale: SCALE, label: 'CMM' },
+
+  { file: '1000-2000-重型货架.glb', position: [-4.8, 3.5, 12.8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+
   // { file: '研磨机220.glb', position: [10, 0, 15], scale: SCALE, label: 'Grinder' },
 
   // --- Logistics ---
   // AGV moving in the aisle
-  { file: '_01_agv堆垛车.glb', position: [0, 3, -8], rotation: [Math.PI / 2, 0, 0], scale: SCALE, label: 'AGV',
+  { file: '_01_agv堆垛车.glb', position: [0, 0.1, -8], rotation: [Math.PI / 2, 0, 0], scale: SCALE, label: 'AGV',
     animatePath: {
         waypoints: [
             { x: -20, y: 0.8, z: 1.7 }, // A
