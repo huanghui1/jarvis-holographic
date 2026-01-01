@@ -48,7 +48,7 @@ function createWindow() {
     });
     
     // Temporarily open DevTools in production to debug the blank screen
-    // win.webContents.openDevTools(); 
+    win.webContents.openDevTools(); 
   }
 }
 
