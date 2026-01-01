@@ -21,7 +21,8 @@
     },
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "public/**/*"
     ],
     "mac": {
       "category": "public.app-category.productivity",

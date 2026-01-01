@@ -218,7 +218,10 @@ const FACTORY_LAYOUT: ModelConfig[] = [
 ];
 
 const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
-  const { scene } = useGLTF(`/models/factory/${config.file}`);
+  // Use a relative path prefix based on environment or ensure base path is correct
+  // In Electron production (file://), absolute paths like /models/... resolve to file:///models/... (root of drive)
+  // We need relative paths: ./models/... or just models/...
+  const { scene } = useGLTF(`./models/factory/${config.file}`);
   const groupRef = useRef<Group>(null);
 
   useGSAP(() => {
@@ -406,6 +409,6 @@ const FactoryScene: React.FC = () => {
 
 // Preload models
 const UNIQUE_FILES = Array.from(new Set(FACTORY_LAYOUT.map(c => c.file)));
-UNIQUE_FILES.forEach(file => useGLTF.preload(`/models/factory/${file}`));
+UNIQUE_FILES.forEach(file => useGLTF.preload(`./models/factory/${file}`));
 
 export default FactoryScene;

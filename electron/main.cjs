@@ -1,6 +1,7 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
+const fs = require('fs');
+// const isDev = require('electron-is-dev'); // Deprecated: using app.isPackaged is more reliable
 
 // --- GPU CONFIGURATION STRATEGY ---
 // We remove aggressive flags because they often cause Chromium to fallback to software rendering
@@ -36,15 +37,36 @@ function createWindow() {
   // Optimize for performance
   win.webContents.setBackgroundThrottling(false);
 
-  if (isDev) {
+  // Use app.isPackaged for reliable production detection
+  if (!app.isPackaged) {
     win.loadURL('http://localhost:3000');
     win.webContents.openDevTools();
+    console.log("Running in Development Mode");
   } else {
-    // In production, we need to be careful with paths
-    // On Windows, the path might need proper handling
-    const indexPath = path.join(__dirname, '../dist/index.html');
-    win.loadFile(indexPath).catch(e => {
-        console.error('Failed to load index.html:', e);
+    // In production, use app.getAppPath() to ensure we are looking at the right place (inside ASAR)
+    // Structure: app.asar/dist/index.html
+    // app.getAppPath() returns the path to app.asar
+    const indexPath = path.join(app.getAppPath(), 'dist', 'index.html');
+    
+    console.log("Attempting to load:", indexPath);
+    
+    // Check if file exists (DEBUGGING)
+    try {
+        if (!fs.existsSync(indexPath)) {
+            const errorMsg = `CRITICAL: Index file not found at ${indexPath}\n\nApp Path: ${app.getAppPath()}\n__dirname: ${__dirname}`;
+            console.error(errorMsg);
+            dialog.showErrorBox('Startup Error', errorMsg);
+        }
+    } catch (err) {
+        console.error("Error checking file existence:", err);
+    }
+
+    win.loadFile(indexPath).then(() => {
+        console.log("Page loaded successfully");
+    }).catch(e => {
+        const loadErr = `Failed to load index.html: ${e.message} (${e.code})`;
+        console.error(loadErr);
+        dialog.showErrorBox('Load Error', loadErr);
     });
     
     // Temporarily open DevTools in production to debug the blank screen
