@@ -11,8 +11,9 @@ import JarvisIntro from './components/JarvisIntro';
 import { WorkshopDetailModal } from './components/WorkshopDetailModal';
 import { HandTrackingState, RegionName } from './types';
 import { SoundService } from './services/soundService';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 
-const App: React.FC = () => {
+const MainApp: React.FC = () => {
   const handTrackingRef = useRef<HandTrackingState>({
     leftHand: null,
     rightHand: null
@@ -166,6 +167,16 @@ const App: React.FC = () => {
       )}
 
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+      </Routes>
+    </HashRouter>
   );
 };
 
