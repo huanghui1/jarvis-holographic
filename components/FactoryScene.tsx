@@ -400,9 +400,9 @@ const FactoryScene: React.FC = () => {
       <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 2.2} />
       {/* 
         Environment provides IBL (Image Based Lighting) for realistic reflections and lighting.
-        Presets: sunset, dawn, night, warehouse, forest, apartment, studio, city, park, lobby
+        Use local HDR file to avoid fetch errors in production
       */}
-      <Environment preset="city" />
+      <Environment files="./models/factory/potsdamer_platz_1k.hdr" />
     </>
   );
 };
