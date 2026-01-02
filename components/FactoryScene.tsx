@@ -402,7 +402,7 @@ const FactoryScene: React.FC = () => {
         Environment provides IBL (Image Based Lighting) for realistic reflections and lighting.
         Use local HDR file to avoid fetch errors in production
       */}
-      <Environment files="./models/factory/potsdamer_platz_1k.hdr" />
+      <Environment files="./assets/potsdamer_platz_1k.hdr" />
     </>
   );
 };
