@@ -2,7 +2,7 @@
 import React, { useRef, useState, useCallback, Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Perf } from 'r3f-perf';
-import { useProgress } from '@react-three/drei';
+import { useProgress, Html } from '@react-three/drei';
 import VideoFeed from './components/VideoFeed';
 // import HolographicFactory from './components/HolographicFactory';
 import FactoryScene from './components/FactoryScene';
@@ -12,6 +12,52 @@ import { WorkshopDetailModal } from './components/WorkshopDetailModal';
 import { HandTrackingState, RegionName } from './types';
 import { SoundService } from './services/soundService';
 import { HashRouter, Routes, Route } from 'react-router-dom';
+
+// Error Boundary for React Components
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("React Error Boundary Caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 text-red-500 p-10 font-mono">
+          <div>
+            <h1 className="text-2xl font-bold mb-4">COMPONENT ERROR</h1>
+            <p>{this.state.error?.message}</p>
+            <pre className="mt-4 text-xs opacity-70 overflow-auto max-h-96">
+              {this.state.error?.stack}
+            </pre>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Loading Indicator
+function Loader() {
+  const { progress } = useProgress();
+  return (
+    <Html center>
+      <div className="text-[#00F0FF] font-mono text-xl text-center bg-black/80 p-4 rounded border border-[#00F0FF]">
+        LOADING SYSTEM ASSETS...<br/>
+        {progress.toFixed(0)}%
+      </div>
+    </Html>
+  );
+}
 
 const MainApp: React.FC = () => {
   const handTrackingRef = useRef<HandTrackingState>({
@@ -84,16 +130,18 @@ const MainApp: React.FC = () => {
 
       {/* 2. 3D Scene Layer (Earth) - Always rendered to ensure loading starts */}
       <div className="absolute inset-0 z-10">
-        <Canvas 
-            camera={{ position: [0, 5, 15], fov: 45 }} 
-            gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true }}
-            dpr={[1, 1.5]}
-        >
-              <Perf position="top-left" deepAnalyze={true} />
-              <Suspense fallback={null}>
-                 <FactoryScene />
-              </Suspense>
-          </Canvas>
+        <ErrorBoundary>
+          <Canvas 
+              camera={{ position: [0, 5, 15], fov: 45 }} 
+              gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true }}
+              dpr={[1, 1.5]}
+          >
+                <Perf position="top-left" deepAnalyze={true} />
+                <Suspense fallback={<Loader />}>
+                   <FactoryScene />
+                </Suspense>
+            </Canvas>
+        </ErrorBoundary>
       </div>
 
       {/* 3. UI/HUD Layer - Only visible when booted */}
