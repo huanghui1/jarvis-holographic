@@ -12,6 +12,9 @@ interface HandTrackingCanvasProps {
 const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef, isModalOpen, onCloseModal }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number | null>(null);
+  const lastDrawTimeRef = useRef<number>(0);
+  const FPS_LIMIT = 30;
+  const FRAME_INTERVAL = 1000 / FPS_LIMIT;
   
   // UI State for Floating Panel - using Ref for performance
   const panelRef = useRef<HTMLDivElement>(null);
@@ -30,7 +33,16 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
 
   // Canvas Drawing Loop (Hand Skeletal & Effects)
   useEffect(() => {
-    const renderFrame = () => {
+    const connections = [[0,1],[1,2],[2,3],[3,4], [0,5],[5,6],[6,7],[7,8], [5,9],[9,10],[10,11],[11,12], [9,13],[13,14],[14,15],[15,16], [13,17],[17,18],[18,19],[19,20], [0,17]];
+
+    const renderFrame = (timestamp: number) => {
+      requestRef.current = requestAnimationFrame(renderFrame);
+
+      const elapsed = timestamp - lastDrawTimeRef.current;
+      if (elapsed < FRAME_INTERVAL) return;
+
+      // Adjust for next frame
+      lastDrawTimeRef.current = timestamp - (elapsed % FRAME_INTERVAL);
 
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext('2d');
@@ -62,8 +74,6 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
           ctx.lineWidth = 1.5;
           ctx.setLineDash([5, 5]);
           ctx.beginPath();
-          
-          const connections = [[0,1],[1,2],[2,3],[3,4], [0,5],[5,6],[6,7],[7,8], [5,9],[9,10],[10,11],[11,12], [9,13],[13,14],[14,15],[15,16], [13,17],[17,18],[18,19],[19,20], [0,17]];
           
           connections.forEach(([start, end]) => {
             const p1 = hand.landmarks[start];
