@@ -48,6 +48,7 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
         
         const updateLoop = () => {
              if (workerRef.current) {
+                 // console.log("[HandTrackingCanvas] Sending update to worker:", handTrackingRef.current);
                  workerRef.current.postMessage({ 
                      type: 'update', 
                      payload: { 

@@ -37,6 +37,9 @@ export class MediaPipeService {
             },
             runningMode: "VIDEO",
             numHands: 2,
+            minHandDetectionConfidence: 0.5,
+            minHandPresenceConfidence: 0.5,
+            minTrackingConfidence: 0.5
           });
         } catch (e) {
           console.warn('Local model load failed, falling back to remote CDN...', e);
@@ -48,6 +51,9 @@ export class MediaPipeService {
             },
             runningMode: "VIDEO",
             numHands: 2,
+            minHandDetectionConfidence: 0.5,
+            minHandPresenceConfidence: 0.5,
+            minTrackingConfidence: 0.5
           });
         }
 

@@ -12,6 +12,9 @@ let lastDrawTime = 0;
 const FPS_LIMIT = 30;
 const FRAME_INTERVAL = 1000 / FPS_LIMIT;
 
+// Debug counter
+let frameCount = 0;
+
 const render = (timestamp: number) => {
     if (!isRunning) return;
     
@@ -23,10 +26,19 @@ const render = (timestamp: number) => {
     
     lastDrawTime = timestamp - (elapsed % FRAME_INTERVAL);
 
+    frameCount++;
+    if (frameCount % 60 === 0) {
+        // console.log("[CanvasWorker] Render alive. Hands:", currentHands);
+    }
+
     if (canvas && ctx) {
         if (canvas.width !== 0 && canvas.height !== 0) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // Debug: Draw a flashing red box in top-left to prove worker is rendering
+            ctx.fillStyle = `rgba(255, 0, 0, ${Math.abs(Math.sin(Date.now() / 200))})`;
+            ctx.fillRect(10, 10, 20, 20);
+
             const hands = currentHands;
             reticleRotation += 0.05;
 
