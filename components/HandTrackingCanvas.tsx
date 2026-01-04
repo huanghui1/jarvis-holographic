@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { HandTrackingState, RegionName } from '../types';
 import { SoundService } from '../services/soundService';
+import CanvasWorker from '../services/canvas.worker.ts?worker'; // Vite worker import
 
 interface HandTrackingCanvasProps {
   handTrackingRef: React.MutableRefObject<HandTrackingState>;
@@ -11,18 +12,18 @@ interface HandTrackingCanvasProps {
 
 const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef, isModalOpen, onCloseModal }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const requestRef = useRef<number | null>(null);
-  const lastDrawTimeRef = useRef<number>(0);
-  const FPS_LIMIT = 30;
-  const FRAME_INTERVAL = 1000 / FPS_LIMIT;
+  const workerRef = useRef<Worker | null>(null);
+  const [canvasKey, setCanvasKey] = React.useState(0);
   
   // UI State for Floating Panel - using Ref for performance
   const panelRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null); // Virtual Cursor
   
-  const reticleRotationRef = useRef(0);
   const wasPinchingRef = useRef(false);
   const isClosingRef = useRef(false);
+
+  // Placeholder for currentRegion which was missing in original context
+  const currentRegion = "区域扫描中...";
 
   // Reset closing lock when modal opens
   useEffect(() => {
@@ -31,232 +32,252 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
       }
   }, [isModalOpen]);
 
-  // Canvas Drawing Loop (Hand Skeletal & Effects)
+  // Canvas Drawing Loop (Offscreen via Worker)
   useEffect(() => {
-    const connections = [[0,1],[1,2],[2,3],[3,4], [0,5],[5,6],[6,7],[7,8], [5,9],[9,10],[10,11],[11,12], [9,13],[13,14],[14,15],[15,16], [13,17],[17,18],[18,19],[19,20], [0,17]];
+    if (!canvasRef.current) return;
 
-    const renderFrame = (timestamp: number) => {
-      requestRef.current = requestAnimationFrame(renderFrame);
-
-      const elapsed = timestamp - lastDrawTimeRef.current;
-      if (elapsed < FRAME_INTERVAL) return;
-
-      // Adjust for next frame
-      lastDrawTimeRef.current = timestamp - (elapsed % FRAME_INTERVAL);
-
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (!canvas || !ctx) return;
-
-      if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const hands = handTrackingRef.current;
-    //   console.log("Hands:", hands);
-      
-      reticleRotationRef.current += 0.05;
-
-      // --- HAND RENDERING ---
-      if (hands.leftHand || hands.rightHand) {
-        // console.log("Rendering hands:", hands);
-      }
-      
-      [hands.leftHand, hands.rightHand].forEach(hand => {
-        if (hand) {
-          const isRight = hand.handedness === 'Right';
-          const mainColor = isRight ? '#00F0FF' : '#00A3FF';
-          
-          // Skeleton
-          ctx.strokeStyle = mainColor;
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([5, 5]);
-          ctx.beginPath();
-          
-          connections.forEach(([start, end]) => {
-            const p1 = hand.landmarks[start];
-            const p2 = hand.landmarks[end];
-            ctx.moveTo((1 - p1.x) * canvas.width, p1.y * canvas.height);
-            ctx.lineTo((1 - p2.x) * canvas.width, p2.y * canvas.height);
-          });
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          // Joints
-          hand.landmarks.forEach((lm, index) => {
-            const x = (1 - lm.x) * canvas.width;
-            const y = lm.y * canvas.height;
-            
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.strokeStyle = mainColor;
-            ctx.lineWidth = 1;
-            
-            ctx.beginPath();
-            ctx.arc(x, y, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            
-            if ([4, 8, 12, 16, 20].includes(index)) {
-                ctx.beginPath();
-                ctx.arc(x, y, 8, reticleRotationRef.current, reticleRotationRef.current + Math.PI);
-                ctx.strokeStyle = isRight ? '#FF2A2A' : '#00F0FF';
-                ctx.stroke();
-            }
-          });
-          
-          // Palm Info
-          const palmX = (1 - hand.landmarks[0].x) * canvas.width;
-          const palmY = hand.landmarks[0].y * canvas.height;
-          
-          ctx.beginPath();
-          ctx.arc(palmX, palmY, 20, -reticleRotationRef.current, -reticleRotationRef.current + Math.PI * 1.5);
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-          ctx.stroke();
-          
-          ctx.font = '10px Rajdhani';
-          ctx.fillStyle = mainColor;
-          const label = isRight ? 'ID: 右手-01' : 'ID: 左手-02';
-          ctx.fillText(label, palmX + 25, palmY);
-        }
-      });
-
-      // --- VIRTUAL MOUSE CURSOR (RIGHT HAND INDEX) ---
-      if (hands.rightHand) {
-          const indexTip = hands.rightHand.landmarks[8];
-          const cursorX = (1 - indexTip.x) * canvas.width;
-          const cursorY = indexTip.y * canvas.height;
-
-          // Update Virtual Cursor DOM Position
-          if (cursorRef.current) {
-              cursorRef.current.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
-              // Only show cursor when modal is open (Mode Switch)
-              cursorRef.current.style.opacity = isModalOpen ? '1' : '0';
-          }
-
-          // Handle Clicks on Modal Elements
-          const isPinching = hands.rightHand.isPinching;
-          
-          // If pinching started just now (Falling Edge of pinch state? No, Rising Edge: false -> true)
-          // Usually a click is "Down" or "Up". Let's simulate click on "Pinch Start".
-          if (isModalOpen && isPinching && !wasPinchingRef.current) {
-              SoundService.playLock();
-              
-              // Perform hit test logic here if needed
-          }
-      } else {
-          if (cursorRef.current) cursorRef.current.style.opacity = '0';
-      }
-
-      // --- LEFT HAND: FIST TO CLOSE MODAL ---
-      if (hands.leftHand && isModalOpen && !isClosingRef.current) {
-          // Check for Fist (Expansion Factor close to 0)
-          // Increased threshold to 0.4 for better sensitivity (easier to trigger)
-          const isFist = hands.leftHand.expansionFactor < 0.4;
-          
-          if (isFist) {
-              isClosingRef.current = true; // Lock to prevent multiple triggers
-              SoundService.playRelease();
-              if (onCloseModal) onCloseModal();
-          }
-      }
-
-      // --- RIGHT HAND: PINCH TO SHOW INTEL (Only if Modal NOT Open) ---
-      if (hands.rightHand && !isModalOpen) {
-        const isPinching = hands.rightHand.isPinching;
+    // Transfer control to OffscreenCanvas
+    const canvas = canvasRef.current;
+    
+    try {
+        // Initialize Worker
+        workerRef.current = new CanvasWorker();
         
-        // Handle State Transition for Sound & Visibility (Direct DOM)
-        if (isPinching && !wasPinchingRef.current) {
-            SoundService.playLock();
-            if (panelRef.current) {
-                panelRef.current.style.opacity = '1';
-                panelRef.current.style.pointerEvents = 'auto';
-                panelRef.current.style.transform = 'scale(1)';
+        const offscreen = canvas.transferControlToOffscreen();
+        workerRef.current.postMessage({ type: 'init', payload: { canvas: offscreen } }, [offscreen]);
+        
+        const updateLoop = () => {
+             if (workerRef.current) {
+                 workerRef.current.postMessage({ 
+                     type: 'update', 
+                     payload: { 
+                         hands: handTrackingRef.current,
+                         isModalOpen
+                     } 
+                 });
+             }
+             requestAnimationFrame(updateLoop);
+        };
+        const frameId = requestAnimationFrame(updateLoop);
+        
+        // Handle resize
+        const handleResize = () => {
+             if (workerRef.current) {
+                 workerRef.current.postMessage({
+                     type: 'resize',
+                     payload: {
+                         width: window.innerWidth,
+                         height: window.innerHeight
+                     }
+                 });
+             }
+        };
+        window.addEventListener('resize', handleResize);
+        // Initial resize
+        handleResize();
+
+        return () => {
+            cancelAnimationFrame(frameId);
+            window.removeEventListener('resize', handleResize);
+            if (workerRef.current) {
+                workerRef.current.terminate();
+                workerRef.current = null;
             }
-        } else if (!isPinching && wasPinchingRef.current) {
-            SoundService.playRelease();
-            if (panelRef.current) {
-                panelRef.current.style.opacity = '0';
-                panelRef.current.style.pointerEvents = 'none';
-                panelRef.current.style.transform = 'scale(0.9)';
-            }
+        };
+
+    } catch (e: any) {
+        console.error("Failed to transfer control to offscreen canvas or init worker", e);
+        // Handle React Strict Mode double-invoke issue where canvas is already transferred
+        if (e.message && (e.message.includes("transfer") || e.message.includes("detach"))) {
+            console.log("Retrying with fresh canvas...");
+            setCanvasKey(prev => prev + 1);
         }
-        wasPinchingRef.current = isPinching;
-
-        // Update Panel Position logic
-        if (isPinching) {
-            const indexTip = hands.rightHand.landmarks[8];
-            const cursorX = (1 - indexTip.x) * canvas.width;
-            const cursorY = indexTip.y * canvas.height;
-            
-            // Direct DOM manipulation for high performance
-            if (panelRef.current) {
-                panelRef.current.style.left = `${cursorX + 50}px`;
-                panelRef.current.style.top = `${cursorY - 100}px`;
-            }
-            
-            // Connector Line from Hand to Panel
-            ctx.beginPath();
-            ctx.moveTo(cursorX, cursorY);
-            ctx.lineTo(cursorX + 50, cursorY - 100); // Connects to top-left of where panel div renders
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([2, 2]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            // Draw Pinch Reticle
-            const thumbTip = hands.rightHand.landmarks[4];
-            const midX = ((1 - indexTip.x) * canvas.width + (1 - thumbTip.x) * canvas.width) / 2;
-            const midY = (indexTip.y * canvas.height + thumbTip.y * canvas.height) / 2;
-             
-            ctx.beginPath();
-            ctx.arc(midX, midY, 15, 0, Math.PI * 2);
-            ctx.strokeStyle = '#FF2A2A';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-             
-            ctx.beginPath();
-            ctx.arc(midX, midY, 5, 0, Math.PI * 2);
-            ctx.fillStyle = '#FF2A2A';
-            ctx.fill();
-        }
-      } else {
-          // If hand lost or modal open, hide panel and reset pinch state tracking
-          if (wasPinchingRef.current || isModalOpen) {
-              if (panelRef.current) {
-                  panelRef.current.style.opacity = '0';
-                  panelRef.current.style.pointerEvents = 'none';
-              }
-              // Only reset state if hand is lost, otherwise we might trigger "Release" sound when modal opens
-              if (!hands.rightHand) wasPinchingRef.current = false;
-          }
-          
-          // If modal is open, we still need to track pinch state for the virtual cursor click logic above
-          // so we sync it here if we haven't already
-          if (hands.rightHand && isModalOpen) {
-              wasPinchingRef.current = hands.rightHand.isPinching;
-          }
-      }
-
-      requestRef.current = requestAnimationFrame(renderFrame);
-    };
-
-    requestRef.current = requestAnimationFrame(renderFrame);
-    return () => {
-        if (requestRef.current) cancelAnimationFrame(requestRef.current);
     }
+  }, [canvasKey]);
+
+  // --- INTERACTION LOGIC (Main Thread) ---
+  useEffect(() => {
+      const interactionLoop = () => {
+          const hands = handTrackingRef.current;
+          
+          // --- VIRTUAL MOUSE CURSOR (RIGHT HAND INDEX) ---
+          if (hands.rightHand) {
+              const indexTip = hands.rightHand.landmarks[8];
+              // Map 0-1 to window size
+              const cursorX = (1 - indexTip.x) * window.innerWidth;
+              const cursorY = indexTip.y * window.innerHeight;
+    
+              // Update Virtual Cursor DOM Position
+              if (cursorRef.current) {
+                  cursorRef.current.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
+                  // Only show cursor when modal is open (Mode Switch)
+                  cursorRef.current.style.opacity = isModalOpen ? '1' : '0';
+              }
+    
+              // Handle Clicks on Modal Elements
+              const isPinching = hands.rightHand.isPinching;
+              
+              if (isModalOpen && isPinching && !wasPinchingRef.current) {
+                  SoundService.playLock();
+                  // Perform hit test logic here if needed
+              }
+          } else {
+              if (cursorRef.current) cursorRef.current.style.opacity = '0';
+          }
+    
+          // --- LEFT HAND: FIST TO CLOSE MODAL ---
+          if (hands.leftHand && isModalOpen && !isClosingRef.current) {
+              const isFist = hands.leftHand.expansionFactor < 0.4;
+              
+              if (isFist) {
+                  isClosingRef.current = true;
+                  SoundService.playRelease();
+                  if (onCloseModal) onCloseModal();
+              }
+          }
+    
+          // --- RIGHT HAND: PINCH TO SHOW INTEL (Only if Modal NOT Open) ---
+          if (hands.rightHand && !isModalOpen) {
+            const isPinching = hands.rightHand.isPinching;
+            
+            // Handle State Transition for Sound & Visibility (Direct DOM)
+            if (isPinching && !wasPinchingRef.current) {
+                SoundService.playLock();
+                if (panelRef.current) {
+                    panelRef.current.style.opacity = '1';
+                    panelRef.current.style.pointerEvents = 'auto';
+                    panelRef.current.style.transform = 'scale(1)';
+                }
+            } else if (!isPinching && wasPinchingRef.current) {
+                SoundService.playRelease();
+                if (panelRef.current) {
+                    panelRef.current.style.opacity = '0';
+                    panelRef.current.style.pointerEvents = 'none';
+                    panelRef.current.style.transform = 'scale(0.9)';
+                }
+            }
+            wasPinchingRef.current = isPinching;
+    
+            // Update Panel Position logic
+            if (isPinching) {
+                const indexTip = hands.rightHand.landmarks[8];
+                const cursorX = (1 - indexTip.x) * window.innerWidth;
+                const cursorY = indexTip.y * window.innerHeight;
+                
+                // Direct DOM manipulation for high performance
+                if (panelRef.current) {
+                    panelRef.current.style.left = `${cursorX + 50}px`;
+                    panelRef.current.style.top = `${cursorY - 100}px`;
+                }
+            }
+          } else {
+              // If hand lost or modal open, hide panel and reset pinch state tracking
+              if (wasPinchingRef.current || isModalOpen) {
+                  if (panelRef.current) {
+                      panelRef.current.style.opacity = '0';
+                      panelRef.current.style.pointerEvents = 'none';
+                  }
+                  if (!hands.rightHand) wasPinchingRef.current = false;
+              }
+              if (hands.rightHand && isModalOpen) {
+                  wasPinchingRef.current = hands.rightHand.isPinching;
+              }
+          }
+
+          requestAnimationFrame(interactionLoop);
+      };
+      
+      const frameId = requestAnimationFrame(interactionLoop);
+      return () => cancelAnimationFrame(frameId);
   }, [handTrackingRef, isModalOpen, onCloseModal]);
 
-  // Use React Portal to render the canvas directly into the document.body or a specific root container
-  // to ensures it stays on top of everything, including Modals that are also portals.
   return createPortal(
     <>
       <canvas 
+          key={canvasKey}
           ref={canvasRef} 
           className="fixed top-0 left-0 w-full h-full z-[9999] pointer-events-none" 
       />
+      
+      {/* --- INTERACTIVE FLOATING PANEL (PINCH) --- */}
+      <div 
+        ref={panelRef}
+        className="fixed z-[10001] transition-all duration-200 ease-out origin-top-left"
+        style={{ 
+            width: '300px',
+            opacity: 0,
+            pointerEvents: 'none',
+            transform: 'scale(0.9)',
+            // Initial position off-screen, updated by JS
+            left: 0,
+            top: 0
+        }}
+      >
+        <div className="bg-black/80 border-l-2 border-alert-red shadow-[0_0_40px_rgba(255,42,42,0.3)] backdrop-blur-xl p-1 rounded-r-lg">
+            <div className="flex justify-between items-center bg-gradient-to-r from-alert-red/50 to-transparent p-2 mb-2 border-b border-white/10">
+                <span className="font-display font-bold text-sm tracking-widest text-white">GEO_INTEL_LIVE</span>
+                <div className="w-2 h-2 bg-alert-red rounded-full animate-ping"></div>
+            </div>
+
+            <div className="p-4 space-y-4">
+                <div className="flex justify-between items-end">
+                    <div className="text-xs text-holo-blue uppercase">目标区域</div>
+                    <div className="text-2xl font-display text-white font-bold drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
+                        {currentRegion}
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] uppercase text-gray-400">
+                            <span>信号强度</span>
+                            <span>98%</span>
+                        </div>
+                        <div className="w-full bg-gray-900 h-1.5 overflow-hidden rounded-sm">
+                            <div className="bg-holo-cyan h-full w-[98%] shadow-[0_0_10px_#00F0FF] relative">
+                                <div className="absolute top-0 left-0 h-full w-full bg-white/30 animate-[scanline_1s_linear_infinite]"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                     <div className="grid grid-cols-2 gap-2 mt-2">
+                         <div className="bg-white/5 p-1 text-center border border-white/10">
+                             <div className="text-[8px] text-gray-400">经度</div>
+                             <div className="font-mono text-xs text-holo-cyan">116.4074</div>
+                         </div>
+                         <div className="bg-white/5 p-1 text-center border border-white/10">
+                             <div className="text-[8px] text-gray-400">纬度</div>
+                             <div className="font-mono text-xs text-holo-cyan">39.9042</div>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+        {/* Decorator Lines */}
+        <svg className="absolute -left-4 top-0 w-4 h-full overflow-visible">
+             <path d="M 4,0 L 0,10 L 0,150" fill="none" stroke="#FF2A2A" strokeWidth="1" />
+        </svg>
+      </div>
+
+      {/* --- VIRTUAL CURSOR (Visible only when Modal is Open) --- */}
+      <div 
+        ref={cursorRef}
+        className="fixed top-0 left-0 w-8 h-8 pointer-events-none z-[10000] transition-opacity duration-200 opacity-0"
+        style={{
+            marginTop: '-16px',
+            marginLeft: '-16px',
+        }}
+      >
+         {/* Cursor Ring */}
+         <div className="absolute inset-0 border-2 border-red-500 rounded-full animate-pulse shadow-[0_0_15px_#FF2A2A]"></div>
+         {/* Center Dot */}
+         <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+         {/* Crosshairs */}
+         <div className="absolute top-0 left-1/2 h-2 w-0.5 bg-red-500 transform -translate-x-1/2"></div>
+         <div className="absolute bottom-0 left-1/2 h-2 w-0.5 bg-red-500 transform -translate-x-1/2"></div>
+         <div className="absolute top-1/2 left-0 w-2 h-0.5 bg-red-500 transform -translate-y-1/2"></div>
+         <div className="absolute top-1/2 right-0 w-2 h-0.5 bg-red-500 transform -translate-y-1/2"></div>
+      </div>
     </>,
     document.body
   );
