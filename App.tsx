@@ -7,6 +7,7 @@ import VideoFeed from './components/VideoFeed';
 // import HolographicFactory from './components/HolographicFactory';
 import FactoryScene from './components/FactoryScene';
 import HUDOverlay from './components/HUDOverlay';
+import HandTrackingCanvas from './components/HandTrackingCanvas';
 import JarvisIntro from './components/JarvisIntro';
 import { WorkshopDetailModal } from './components/WorkshopDetailModal';
 import { HandTrackingState, RegionName } from './types';
@@ -65,7 +66,6 @@ const MainApp: React.FC = () => {
     rightHand: null
   });
 
-  const [currentRegion, setCurrentRegion] = useState<RegionName>(RegionName.ASIA);
   const [booted, setBooted] = useState(false);
   const [introActive, setIntroActive] = useState(false);
   const [bootStep, setBootStep] = useState(0);
@@ -146,10 +146,16 @@ const MainApp: React.FC = () => {
 
       {/* 3. UI/HUD Layer - Only visible when booted */}
       {booted && !introActive && (
-          <HUDOverlay 
-            handTrackingRef={handTrackingRef} 
-            currentRegion={currentRegion}
-          />
+          <>
+            <HandTrackingCanvas 
+                handTrackingRef={handTrackingRef}
+                isModalOpen={detailModalOpen}
+                onCloseModal={() => setDetailModalOpen(false)}
+            />
+            <HUDOverlay 
+                handTrackingRef={handTrackingRef} 
+            />
+          </>
       )}
       
       {/* 4. Overlay Modals */}

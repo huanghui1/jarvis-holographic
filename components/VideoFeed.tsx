@@ -48,6 +48,8 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
           
           const renderLoop = () => {
             if (!isMounted) return;
+            
+            requestRef.current = requestAnimationFrame(renderLoop);
 
             if (videoRef.current && 
                 videoRef.current.readyState >= 2 && 
@@ -64,7 +66,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
                       
                       try {
                         const results = recognizer.recognizeForVideo(videoRef.current, now);
-                        
+                        console.log("Raw results:", results);
                         const newState: HandTrackingState = {
                           leftHand: null,
                           rightHand: null
@@ -135,9 +137,8 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
               }
             }
           };
-          
+
           requestRef.current = requestAnimationFrame(renderLoop);
-          renderLoop();
         }
       } catch (err) {
         console.error("Error accessing camera:", err);
