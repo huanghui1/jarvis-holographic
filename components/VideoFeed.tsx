@@ -17,6 +17,9 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
 
     const startCamera = async () => {
       try {
+
+        if (videoRef.current && isMounted) {
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 1280 },
@@ -24,8 +27,6 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
             facingMode: "user"
           }
         });
-
-        if (videoRef.current && isMounted) {
           videoRef.current.srcObject = stream;
           
           // Robust video play handling
@@ -133,9 +134,9 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
                   }
               }
             }
-            requestRef.current = requestAnimationFrame(renderLoop);
           };
           
+          requestRef.current = requestAnimationFrame(renderLoop);
           renderLoop();
         }
       } catch (err) {
