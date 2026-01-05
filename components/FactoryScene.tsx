@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from 'react';
-import { useGLTF, OrbitControls, Environment, Text, Billboard } from '@react-three/drei';
+import { useGLTF, OrbitControls, Environment, Text, Billboard, Instances, Instance } from '@react-three/drei';
 // import { useFrame } from '@react-three/fiber';
-import { Box3, Vector3, Group, Mesh, MeshStandardMaterial, Color } from 'three';
+import { Box3, Vector3, Group, Mesh, MeshStandardMaterial, Color, FrontSide } from 'three';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
@@ -270,21 +270,11 @@ const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
              // We need to reverse the waypoints
              const reversedWaypoints = [...waypoints].reverse();
              
-             // Important: autoRotate calculates rotation based on the PATH.
-             // When going backwards, the path vector is opposite, so autoRotate will naturally flip the object 180 degrees instantly to face the path.
-             // This conflicts with our manual turn.
-             // Solution: For the return trip, we want the object to face the path, but since we manually turned it 180,
-             // and the path is reversed, autoRotate might just work if we rely on it.
-             
-             // BUT, MotionPathPlugin's autoRotate is tricky with continuous timelines.
-             // Let's try explicitly setting start/end rotations or just trusting motionPath to handle the orientation if we give it the right path.
-             
              tl.to(groupRef.current.position, {
                  motionPath: {
                      path: reversedWaypoints,
                      curviness: 0.5,
                      autoRotate: true, 
-                     // autoRotate: 90 // Optional offset if model is facing wrong way
                  },
                  duration: duration,
                  ease: "power1.inOut"
@@ -303,6 +293,22 @@ const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
     
+    // Universal Optimization
+    clone.traverse((child) => {
+      if ((child as Mesh).isMesh) {
+         const mesh = child as Mesh;
+         mesh.castShadow = false;
+         mesh.receiveShadow = false;
+
+         if (mesh.material) {
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            mats.forEach((m: any) => {
+                m.side = FrontSide;
+            });
+         }
+      }
+    });
+
     // Auto-center the "Factory Floor" model only
     if (config.file === '车间大平面.glb') {
         const box = new Box3().setFromObject(clone);
@@ -311,12 +317,6 @@ const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
         // Offset the model so its center is at (0,0,0) of its local group (X/Z only)
         clone.position.x -= center.x;
         clone.position.z -= center.z;
-        // Do not offset Y, to keep the floor at its original height (usually 0)
-        // clone.position.sub(center);
-        
-        // Keep it on the ground (optional: if y-center puts it halfway underground)
-        // const size = box.getSize(new Vector3());
-        // clone.position.y += size.y / 2; 
 
         // Fix flickering: traverse and update material to avoid z-fighting with ground
         clone.traverse((child) => {
@@ -325,8 +325,6 @@ const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
              mesh.renderOrder = -1; // Render first
 
              // Check if it looks like a yellow marking (High R, High G, Low B)
-             // Or check based on mesh name if available (often named 'marking' or similar)
-             // Here we use a heuristic based on color or name
              let isMarking = false;
              
              if (mesh.material) {
@@ -381,7 +379,90 @@ const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
   );
 };
 
+const InstancedModels: React.FC<{ file: string; instances: ModelConfig[] }> = ({ file, instances }) => {
+  const { scene } = useGLTF(`./models/factory/${file}`);
+
+  const meshData = useMemo(() => {
+    const m: { geometry: any; material: any }[] = [];
+    // Clone scene to avoid modifying the cached original if we were to modify nodes directly,
+    // but here we just traverse and clone geometry.
+    // However, scene.updateMatrixWorld() modifies the scene graph. 
+    // useGLTF returns the same scene object for same URL. 
+    // So if multiple components used this, it might be an issue. 
+    // But here we are the only consumer in this way.
+    // To be safe, we can clone the scene first? 
+    // Cloning a whole scene is expensive.
+    // updateMatrixWorld() is usually harmless if the scene is static.
+    
+    scene.updateMatrixWorld(true);
+    
+    scene.traverse((child) => {
+      if ((child as Mesh).isMesh) {
+        const mesh = child as Mesh;
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+
+        if (mesh.material) {
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            mats.forEach((m: any) => {
+                m.side = FrontSide;
+            });
+        }
+
+        // Clone geometry to bake the transform
+        const geom = mesh.geometry.clone();
+        geom.applyMatrix4(mesh.matrixWorld);
+        
+        m.push({
+          geometry: geom,
+          material: mesh.material,
+        });
+      }
+    });
+    return m;
+  }, [scene]);
+
+  return (
+    <group>
+      {meshData.map((item, i) => (
+        <Instances key={i} range={instances.length} geometry={item.geometry} material={item.material}>
+            {instances.map((config, j) => (
+              <Instance
+                key={j}
+                position={config.position}
+                rotation={config.rotation}
+                scale={config.scale || 1}
+              />
+            ))}
+        </Instances>
+      ))}
+    </group>
+  );
+};
+
 const FactoryScene: React.FC = () => {
+  const { singles, groups } = useMemo(() => {
+    const singles: ModelConfig[] = [];
+    const groups: Record<string, ModelConfig[]> = {};
+
+    FACTORY_LAYOUT.forEach(config => {
+      // Filter out special cases that need individual ModelItem
+      // 1. Animated paths
+      // 2. Explicitly centered (likely needs bounding box calculation per item or implies special handling)
+      // 3. The main floor (has special material logic)
+      const isSpecial = config.animatePath || config.center || config.file === '车间大平面.glb';
+
+      if (isSpecial) {
+        singles.push(config);
+      } else {
+        if (!groups[config.file]) groups[config.file] = [];
+        groups[config.file].push(config);
+      }
+    });
+
+    return { singles, groups };
+  }, []);
+
   return (
     <>
       {/* <ambientLight intensity={0.5} /> */}
@@ -392,8 +473,12 @@ const FactoryScene: React.FC = () => {
         {/* Debug Helpers */}
         <axesHelper args={[100]} />
 
-        {FACTORY_LAYOUT.map((config, index) => (
-          <ModelItem key={`${config.file}-${index}`} config={config} />
+        {singles.map((config, index) => (
+          <ModelItem key={`${config.file}-single-${index}`} config={config} />
+        ))}
+
+        {Object.entries(groups).map(([file, instances]) => (
+          <InstancedModels key={file} file={file} instances={instances} />
         ))}
       </group>
 

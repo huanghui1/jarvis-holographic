@@ -133,8 +133,8 @@ const MainApp: React.FC = () => {
         <ErrorBoundary>
           <Canvas 
               camera={{ position: [0, 5, 15], fov: 45 }} 
-              gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true }}
-              dpr={[1, 1.5]}
+              gl={{ alpha: true, antialias: true, logarithmicDepthBuffer: true, powerPreference: "high-performance" }}
+              dpr={1}
           >
                 <Perf position="top-left" deepAnalyze={true} />
                 <Suspense fallback={<Loader />}>
