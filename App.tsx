@@ -138,7 +138,11 @@ const MainApp: React.FC = () => {
           >
                 <Perf position="top-left" deepAnalyze={true} />
                 <Suspense fallback={<Loader />}>
-                   <FactoryScene handTrackingRef={handTrackingRef} isModalOpen={detailModalOpen} />
+                   <FactoryScene 
+                      handTrackingRef={handTrackingRef} 
+                      isModalOpen={detailModalOpen} 
+                      onWorkshopClick={handleWorkshopClick}
+                   />
                 </Suspense>
             </Canvas>
         </ErrorBoundary>

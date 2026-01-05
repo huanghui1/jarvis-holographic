@@ -145,7 +145,8 @@ const FACTORY_LAYOUT: ModelConfig[] = [
 
   // --- Central Heavy Machinery ---
   // The large Gantry CNC in the middle
-  { file: '龙门cnc.glb', position: [11, 0, -5.7], rotation: [0, 0, 0], scale: SCALE, label: 'Gantry CNC' },
+  // { file: '龙门cnc.glb', position: [11, 0, -5.7], rotation: [0, 0, 0], scale: SCALE, label: 'Gantry CNC' },
+  { file: '龙门cnc4.glb', position: [11, 0, -5.7], rotation: [0, 0, 0], scale: SCALE, label: 'Gantry CNC' },
 
   // --- Assembly & Inspection (Middle/Left) ---
   // Workbenches
@@ -446,11 +447,32 @@ const GestureController: React.FC<{
   handTrackingRef?: React.MutableRefObject<HandTrackingState>;
   controlsRef: React.MutableRefObject<any>;
   isModalOpen?: boolean;
-}> = ({ handTrackingRef, controlsRef, isModalOpen }) => {
+  onWorkshopClick?: (name: string) => void;
+}> = ({ handTrackingRef, controlsRef, isModalOpen, onWorkshopClick }) => {
+  const { camera } = useThree();
   const previousHandPos = useRef<{x: number, y: number} | null>(null);
   const previousPinchDist = useRef<number | null>(null); // For dual hand zoom
   const isPinchingRef = useRef(false);
   const isDualGestureRef = useRef(false);
+  const lastRightPinchRef = useRef(false);
+  
+  // Use a ref to track modal state accessible within useFrame closure reliably
+  const isModalOpenRef = useRef(isModalOpen);
+  useEffect(() => {
+    isModalOpenRef.current = isModalOpen;
+  }, [isModalOpen]);
+
+  // Reset states when modal opens/closes to prevent ghost interactions
+  useEffect(() => {
+    if (isModalOpen) {
+      previousHandPos.current = null;
+      previousPinchDist.current = null;
+      isPinchingRef.current = false;
+      isDualGestureRef.current = false;
+      lastRightPinchRef.current = false;
+      activeAxisRef.current = 'none';
+    }
+  }, [isModalOpen]);
   
   // Track which axis is currently "locked" for the active gesture
   // 'none' = analyzing intent
@@ -464,10 +486,62 @@ const GestureController: React.FC<{
   const ZOOM_SENSITIVITY = 5; 
 
   useFrame(() => {
-    if (!handTrackingRef?.current || !controlsRef.current || isModalOpen) return;
+    console.log('isModalOpenRef: ', isModalOpenRef.current);
+    // Strictly disable all 3D gestures when modal is open (check ref for latest state)
+    if (isModalOpenRef.current) return;
+    
+    if (!handTrackingRef?.current || !controlsRef.current) return;
     
     const { leftHand, rightHand } = handTrackingRef.current;
     
+    // --- RIGHT HAND CLICK INTERACTION ---
+    if (rightHand) {
+        // Detect Pinch Release (Falling Edge)
+        // Check for dual gesture lock. 
+        // Relaxation: If left hand is NOT pinching (or lost), ignore isDualGestureRef to allow quick switching
+        const isRealDualGesture = isDualGestureRef.current && leftHand && leftHand.isPinching;
+
+        if (!rightHand.isPinching && lastRightPinchRef.current && !isRealDualGesture) {
+             if (onWorkshopClick) {
+                 // 1. Get Hand Cursor Position in NDC (-1 to 1)
+                 const indexTip = rightHand.landmarks[8];
+                 const cursorNDC = {
+                     x: (indexTip.x - 0.5) * 2,
+                     y: -(indexTip.y - 0.5) * 2
+                 };
+
+                 // 2. Find closest interactive item
+                 // Increased threshold from 0.15 to 0.3 to improve hit rate
+                 let minDist = 0.3; 
+                 let closestLabel: string | null = null;
+
+                 FACTORY_LAYOUT.forEach(item => {
+                     if (!item.label) return;
+                     
+                     // Convert item position to World Space then to NDC
+                     const itemPos = new Vector3(...item.position);
+                     itemPos.multiplyScalar(SCENE_SCALE); // Apply group scale
+                     itemPos.project(camera); // Project to NDC
+                     
+                     // Check distance in 2D screen space
+                     const dx = itemPos.x - cursorNDC.x;
+                     const dy = itemPos.y - cursorNDC.y;
+                     const dist = Math.sqrt(dx*dx + dy*dy);
+                     
+                     if (dist < minDist) {
+                         minDist = dist;
+                         closestLabel = item.label;
+                     }
+                 });
+
+                 if (closestLabel) {
+                     onWorkshopClick(closestLabel);
+                 }
+             }
+        }
+        lastRightPinchRef.current = rightHand.isPinching;
+    }
+
     // Check for Dual Hand Gesture (Both Pinching) -> ZOOM
     if (leftHand && rightHand && leftHand.isPinching && rightHand.isPinching) {
         // Calculate Distance between hands (using index tips or centroids)
@@ -580,7 +654,8 @@ const GestureController: React.FC<{
 const FactoryScene: React.FC<{ 
   handTrackingRef?: React.MutableRefObject<HandTrackingState>;
   isModalOpen?: boolean;
-}> = ({ handTrackingRef, isModalOpen }) => {
+  onWorkshopClick?: (name: string) => void;
+}> = ({ handTrackingRef, isModalOpen, onWorkshopClick }) => {
   const { singles, groups } = useMemo(() => {
     const singles: ModelConfig[] = [];
     const groups: Record<string, ModelConfig[]> = {};
@@ -607,7 +682,12 @@ const FactoryScene: React.FC<{
 
   return (
     <>
-      <GestureController handTrackingRef={handTrackingRef} controlsRef={controlsRef} isModalOpen={isModalOpen} />
+      <GestureController 
+        handTrackingRef={handTrackingRef} 
+        controlsRef={controlsRef} 
+        isModalOpen={isModalOpen} 
+        onWorkshopClick={onWorkshopClick}
+      />
       {/* <ambientLight intensity={0.5} /> */}
       {/* <directionalLight position={[20, 30, 20]} intensity={1.5} castShadow /> */}
       <pointLight position={[-10, 10, -10]} intensity={0.5} />
@@ -627,6 +707,7 @@ const FactoryScene: React.FC<{
 
       <OrbitControls 
         ref={controlsRef}
+        enabled={!isModalOpen}
         makeDefault 
         minPolarAngle={0} 
         maxPolarAngle={Math.PI / 2.2} 

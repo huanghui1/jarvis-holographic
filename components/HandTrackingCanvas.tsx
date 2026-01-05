@@ -128,7 +128,14 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
     
           // --- LEFT HAND: FIST TO CLOSE MODAL ---
           if (hands.leftHand && isModalOpen && !isClosingRef.current) {
-              const isFist = hands.leftHand.expansionFactor < 0.4;
+              // Fist detection: expansionFactor < 0.4 AND not pinching (fingers curled in, but not just thumb/index)
+              // Better metric for Fist: Check if fingers are curled.
+              // Since we only have 'expansionFactor' (0-1) and 'isPinching', we rely on expansionFactor.
+              // However, Pinching can sometimes yield low expansionFactor if not careful.
+              // We want to ensure it's a closed fist, not just a pinch.
+              // A fist usually has very low expansion factor (<0.3). A pinch might be around 0.3-0.5 depending on calculation.
+              
+              const isFist = hands.leftHand.expansionFactor < 0.2; // Stricter threshold for Fist
               
               if (isFist) {
                   isClosingRef.current = true;
@@ -168,6 +175,9 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
                         panelRef.current.style.transform = 'scale(1)';
                     }
                 } else if (!isPinching && wasPinchingRef.current) {
+                    // Only play release sound if we are NOT opening the modal
+                    // (Opening modal happens on pinch release too, but handled elsewhere)
+                    // But here we are just visual feedback.
                     SoundService.playRelease();
                     if (panelRef.current) {
                         panelRef.current.style.opacity = '0';
@@ -197,11 +207,23 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
                       panelRef.current.style.opacity = '0';
                       panelRef.current.style.pointerEvents = 'none';
                   }
-                  if (!hands.rightHand) wasPinchingRef.current = false;
+                  // Reset wasPinchingRef ONLY if hand is lost. 
+                  // If modal just opened, we want to keep state consistent or reset carefully.
+                  // Current issue: When modal closes, wasPinchingRef might be stale or logic prevents re-trigger.
+                  
+                  if (!hands.rightHand) {
+                      wasPinchingRef.current = false;
+                  } else if (isModalOpen) {
+                      // If modal is open, we force reset pinch state so next time we pinch (after close), it's a new event
+                      wasPinchingRef.current = false;
+                  }
               }
+              // This block below was likely causing issues by overriding state when modal is open
+              /* 
               if (hands.rightHand && isModalOpen) {
                   wasPinchingRef.current = hands.rightHand.isPinching;
               }
+              */
           }
 
           requestAnimationFrame(interactionLoop);
