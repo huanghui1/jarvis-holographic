@@ -1,10 +1,11 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { useGLTF, OrbitControls, Environment, Text, Billboard, Instances, Instance } from '@react-three/drei';
-// import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Box3, Vector3, Group, Mesh, MeshStandardMaterial, Color, FrontSide } from 'three';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+import { HandTrackingState } from '../types';
 
 gsap.registerPlugin(MotionPathPlugin, useGSAP);
 
@@ -440,7 +441,146 @@ const InstancedModels: React.FC<{ file: string; instances: ModelConfig[] }> = ({
   );
 };
 
-const FactoryScene: React.FC = () => {
+// Gesture Controller Component
+const GestureController: React.FC<{ 
+  handTrackingRef?: React.MutableRefObject<HandTrackingState>;
+  controlsRef: React.MutableRefObject<any>;
+  isModalOpen?: boolean;
+}> = ({ handTrackingRef, controlsRef, isModalOpen }) => {
+  const previousHandPos = useRef<{x: number, y: number} | null>(null);
+  const previousPinchDist = useRef<number | null>(null); // For dual hand zoom
+  const isPinchingRef = useRef(false);
+  const isDualGestureRef = useRef(false);
+  
+  // Track which axis is currently "locked" for the active gesture
+  // 'none' = analyzing intent
+  // 'x' = horizontal rotation
+  // 'y' = vertical rotation
+  // 'zoom-dual' = dual hand zoom
+  const activeAxisRef = useRef<'none' | 'x' | 'y' | 'zoom-dual'>('none');
+  
+  // Configuration
+  const ROTATION_SENSITIVITY = 5;
+  const ZOOM_SENSITIVITY = 5; 
+
+  useFrame(() => {
+    if (!handTrackingRef?.current || !controlsRef.current || isModalOpen) return;
+    
+    const { leftHand, rightHand } = handTrackingRef.current;
+    
+    // Check for Dual Hand Gesture (Both Pinching) -> ZOOM
+    if (leftHand && rightHand && leftHand.isPinching && rightHand.isPinching) {
+        // Calculate Distance between hands (using index tips or centroids)
+        const leftPos = leftHand.landmarks[9];
+        const rightPos = rightHand.landmarks[9];
+        const dist = Math.sqrt(
+            Math.pow(leftPos.x - rightPos.x, 2) + 
+            Math.pow(leftPos.y - rightPos.y, 2)
+        );
+
+        if (isDualGestureRef.current && previousPinchDist.current !== null) {
+            const deltaDist = dist - previousPinchDist.current;
+            
+            // Apply Zoom
+            // Moving hands apart (deltaDist > 0) -> Zoom In
+            // Moving hands together (deltaDist < 0) -> Zoom Out
+            if (Math.abs(deltaDist) > 0.002) {
+                const zoomFactor = 1 + Math.abs(deltaDist) * ZOOM_SENSITIVITY;
+                if (deltaDist > 0) {
+                     // Hands moving apart -> Zoom In (Enlarge)
+                     // Swapped to dollyOut based on user feedback that dollyIn was shrinking
+                     // (Normally dollyIn = Zoom In, but environment may vary)
+                     controlsRef.current.dollyOut(zoomFactor);
+                } else {
+                     // Hands moving together -> Zoom Out (Shrink)
+                     controlsRef.current.dollyIn(zoomFactor);
+                }
+                controlsRef.current.update();
+            }
+        }
+
+        // Update State for Dual
+        previousPinchDist.current = dist;
+        isDualGestureRef.current = true;
+        activeAxisRef.current = 'zoom-dual'; // Force lock to zoom
+        
+        // Reset Single Hand State to avoid jumping when one hand releases
+        previousHandPos.current = null;
+        isPinchingRef.current = false;
+
+    } else if (leftHand && leftHand.isPinching) {
+        // --- SINGLE HAND GESTURE (LEFT) -> ROTATION ---
+        
+        // If we were just in dual gesture, don't immediately snap to rotation
+        if (isDualGestureRef.current) {
+            isDualGestureRef.current = false;
+            previousPinchDist.current = null;
+            // Reset position to prevent jump
+            previousHandPos.current = null;
+            activeAxisRef.current = 'none';
+            return;
+        }
+
+        // Use Middle Finger MCP for stability
+        const currentPos = { 
+            x: leftHand.landmarks[9].x, 
+            y: leftHand.landmarks[9].y
+        }; 
+        
+        if (isPinchingRef.current && previousHandPos.current) {
+            const deltaX = currentPos.x - previousHandPos.current.x;
+            const deltaY = currentPos.y - previousHandPos.current.y;
+
+            // Determine Axis if not locked
+            if (activeAxisRef.current === 'none') {
+                const absX = Math.abs(deltaX);
+                const absY = Math.abs(deltaY);
+
+                // Check if any axis exceeds noise threshold to trigger a lock
+                if (absX > 0.005 || absY > 0.005) {
+                    if (absX > absY) {
+                        activeAxisRef.current = 'x';
+                    } else {
+                        activeAxisRef.current = 'y';
+                    }
+                }
+            }
+
+            // Apply Transformation based on Locked Axis
+            if (activeAxisRef.current === 'x') {
+                if (Math.abs(deltaX) > 0.001) {
+                    const currentAzimuth = controlsRef.current.getAzimuthalAngle();
+                    controlsRef.current.setAzimuthalAngle(currentAzimuth - deltaX * ROTATION_SENSITIVITY);
+                }
+            } else if (activeAxisRef.current === 'y') {
+                if (Math.abs(deltaY) > 0.001) {
+                    const currentPolar = controlsRef.current.getPolarAngle();
+                    controlsRef.current.setPolarAngle(currentPolar - deltaY * ROTATION_SENSITIVITY);
+                }
+            }
+        }
+        
+        // Update State
+        previousHandPos.current = currentPos;
+        isPinchingRef.current = true;
+        
+    } else {
+        // Reset state when not pinching
+        isPinchingRef.current = false;
+        isDualGestureRef.current = false;
+        previousHandPos.current = null;
+        previousPinchDist.current = null;
+        activeAxisRef.current = 'none'; // Reset lock
+    }
+  });
+
+  return null;
+};
+
+const FactoryScene: React.FC<{ 
+  handTrackingRef?: React.MutableRefObject<HandTrackingState>;
+  isModalOpen?: boolean;
+}> = ({ handTrackingRef, isModalOpen }) => {
   const { singles, groups } = useMemo(() => {
     const singles: ModelConfig[] = [];
     const groups: Record<string, ModelConfig[]> = {};
@@ -463,8 +603,11 @@ const FactoryScene: React.FC = () => {
     return { singles, groups };
   }, []);
 
+  const controlsRef = useRef<any>(null);
+
   return (
     <>
+      <GestureController handTrackingRef={handTrackingRef} controlsRef={controlsRef} isModalOpen={isModalOpen} />
       {/* <ambientLight intensity={0.5} /> */}
       {/* <directionalLight position={[20, 30, 20]} intensity={1.5} castShadow /> */}
       <pointLight position={[-10, 10, -10]} intensity={0.5} />
@@ -482,7 +625,14 @@ const FactoryScene: React.FC = () => {
         ))}
       </group>
 
-      <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 2.2} />
+      <OrbitControls 
+        ref={controlsRef}
+        makeDefault 
+        minPolarAngle={0} 
+        maxPolarAngle={Math.PI / 2.2} 
+        enableDamping={true}
+        dampingFactor={0.1}
+      />
       {/* 
         Environment provides IBL (Image Based Lighting) for realistic reflections and lighting.
         Use local HDR file to avoid fetch errors in production

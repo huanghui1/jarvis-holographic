@@ -139,36 +139,55 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
     
           // --- RIGHT HAND: PINCH TO SHOW INTEL (Only if Modal NOT Open) ---
           if (hands.rightHand && !isModalOpen) {
-            const isPinching = hands.rightHand.isPinching;
+            // Check for Dual Hand Zoom mode: If Left Hand is also pinching, suppress Right Hand UI gestures
+            const isDualGesture = hands.leftHand?.isPinching && hands.rightHand.isPinching;
             
-            // Handle State Transition for Sound & Visibility (Direct DOM)
-            if (isPinching && !wasPinchingRef.current) {
-                SoundService.playLock();
-                if (panelRef.current) {
-                    panelRef.current.style.opacity = '1';
-                    panelRef.current.style.pointerEvents = 'auto';
-                    panelRef.current.style.transform = 'scale(1)';
-                }
-            } else if (!isPinching && wasPinchingRef.current) {
-                SoundService.playRelease();
+            if (isDualGesture) {
+                // If we are in dual gesture, ensure panel is hidden
                 if (panelRef.current) {
                     panelRef.current.style.opacity = '0';
                     panelRef.current.style.pointerEvents = 'none';
-                    panelRef.current.style.transform = 'scale(0.9)';
                 }
-            }
-            wasPinchingRef.current = isPinching;
-    
-            // Update Panel Position logic
-            if (isPinching) {
-                const indexTip = hands.rightHand.landmarks[8];
-                const cursorX = (1 - indexTip.x) * window.innerWidth;
-                const cursorY = indexTip.y * window.innerHeight;
+                // We do NOT update wasPinchingRef here to avoid triggering "Release" sound when exiting dual gesture
+                // Actually, we should probably reset state carefully.
+                // If user was pinching right hand (panel open) then pinched left hand -> Panel should disappear?
+                // Yes.
+                if (wasPinchingRef.current) {
+                    wasPinchingRef.current = false; 
+                    // Should we play release sound? Maybe not to avoid noise.
+                }
+            } else {
+                const isPinching = hands.rightHand.isPinching;
                 
-                // Direct DOM manipulation for high performance
-                if (panelRef.current) {
-                    panelRef.current.style.left = `${cursorX + 50}px`;
-                    panelRef.current.style.top = `${cursorY - 100}px`;
+                // Handle State Transition for Sound & Visibility (Direct DOM)
+                if (isPinching && !wasPinchingRef.current) {
+                    SoundService.playLock();
+                    if (panelRef.current) {
+                        panelRef.current.style.opacity = '1';
+                        panelRef.current.style.pointerEvents = 'auto';
+                        panelRef.current.style.transform = 'scale(1)';
+                    }
+                } else if (!isPinching && wasPinchingRef.current) {
+                    SoundService.playRelease();
+                    if (panelRef.current) {
+                        panelRef.current.style.opacity = '0';
+                        panelRef.current.style.pointerEvents = 'none';
+                        panelRef.current.style.transform = 'scale(0.9)';
+                    }
+                }
+                wasPinchingRef.current = isPinching;
+        
+                // Update Panel Position logic
+                if (isPinching) {
+                    const indexTip = hands.rightHand.landmarks[8];
+                    const cursorX = (1 - indexTip.x) * window.innerWidth;
+                    const cursorY = indexTip.y * window.innerHeight;
+                    
+                    // Direct DOM manipulation for high performance
+                    if (panelRef.current) {
+                        panelRef.current.style.left = `${cursorX + 50}px`;
+                        panelRef.current.style.top = `${cursorY - 100}px`;
+                    }
                 }
             }
           } else {
