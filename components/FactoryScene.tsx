@@ -198,7 +198,7 @@ const FACTORY_LAYOUT: ModelConfig[] = [
   { file: 's三坐标机.glb', position: [-2.8, 0, 8], scale: SCALE, label: 'CMM' },
   { file: 's三坐标机.glb', position: [-2.8, 0, 10.8], scale: SCALE, label: 'CMM' },
 
-  { file: '1000-2000-重型货架.glb', position: [-4.8, 3.5, 12.8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
+  // { file: '1000-2000-重型货架.glb', position: [-4.8, 3.5, 12.8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
 
   // { file: '研磨机220.glb', position: [10, 0, 15], scale: SCALE, label: 'Grinder' },
 
