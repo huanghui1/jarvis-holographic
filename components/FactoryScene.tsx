@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { HandTrackingState } from '../types';
+import hdrEnv from '../assets/potsdamer_platz_1k.hdr';
 
 gsap.registerPlugin(MotionPathPlugin, useGSAP);
 
@@ -718,7 +719,7 @@ const FactoryScene: React.FC<{
         Environment provides IBL (Image Based Lighting) for realistic reflections and lighting.
         Use local HDR file to avoid fetch errors in production
       */}
-      <Environment files="./assets/potsdamer_platz_1k.hdr" />
+      <Environment files={hdrEnv} />
     </>
   );
 };

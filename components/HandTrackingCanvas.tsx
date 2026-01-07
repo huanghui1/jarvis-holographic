@@ -119,7 +119,7 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
               const isPinching = hands.rightHand.isPinching;
               
               if (isModalOpen && isPinching && !wasPinchingRef.current) {
-                  SoundService.playLock();
+                  // SoundService.playLock();
                   // Perform hit test logic here if needed
               }
           } else {
@@ -168,7 +168,7 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
                 
                 // Handle State Transition for Sound & Visibility (Direct DOM)
                 if (isPinching && !wasPinchingRef.current) {
-                    SoundService.playLock();
+                    // SoundService.playLock();
                     if (panelRef.current) {
                         panelRef.current.style.opacity = '1';
                         panelRef.current.style.pointerEvents = 'auto';

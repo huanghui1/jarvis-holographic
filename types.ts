@@ -32,12 +32,4 @@ export interface PanelPosition {
   y: number;
 }
 
-declare module '*.task' {
-  const url: string;
-  export default url;
-}
 
-declare module '*.task?url' {
-  const url: string;
-  export default url;
-}
