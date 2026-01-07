@@ -40,7 +40,7 @@ function createWindow() {
   // Use app.isPackaged for reliable production detection
   if (!app.isPackaged) {
     win.loadURL('http://localhost:3000');
-    win.webContents.openDevTools();
+    // win.webContents.openDevTools();
     console.log("Running in Development Mode");
   } else {
     // In production, use app.getAppPath() to ensure we are looking at the right place (inside ASAR)
@@ -70,7 +70,7 @@ function createWindow() {
     });
     
     // Temporarily open DevTools in production to debug the blank screen
-    win.webContents.openDevTools(); 
+    // win.webContents.openDevTools(); 
   }
 }
 
