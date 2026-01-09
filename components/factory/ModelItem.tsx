@@ -162,7 +162,12 @@ export const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
   const innerRotation = isAnimated ? (config.rotation || [0, 0, 0]) : [0, 0, 0];
 
   return (
-    <group ref={groupRef} position={config.position} rotation={outerRotation as any}>
+    <group 
+      ref={groupRef} 
+      position={config.position} 
+      rotation={outerRotation as any}
+      userData={{ label: config.label, type: 'model-item' }}
+    >
       <group rotation={innerRotation as any}>
         <primitive object={clonedScene} scale={config.scale || 1} />
       </group>

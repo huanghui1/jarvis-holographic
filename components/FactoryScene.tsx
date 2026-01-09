@@ -50,7 +50,7 @@ const FactoryScene: React.FC<{
       {/* <directionalLight position={[20, 30, 20]} intensity={1.5} castShadow /> */}
       <pointLight position={[-10, 10, -10]} intensity={0.5} />
       
-      <group scale={SCENE_SCALE}>
+      <group scale={SCENE_SCALE} name="factory-world">
         {/* Debug Helpers */}
         <axesHelper args={[100]} />
 

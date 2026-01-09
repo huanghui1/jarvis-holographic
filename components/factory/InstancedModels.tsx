@@ -47,9 +47,15 @@ export const InstancedModels: React.FC<{ file: string; instances: ModelConfig[] 
   }, [scene]);
 
   return (
-    <group>
+    <group userData={{ instancesConfig: instances, type: 'instanced-model' }}>
       {meshData.map((item, i) => (
-        <Instances key={i} range={instances.length} geometry={item.geometry} material={item.material}>
+        <Instances 
+          key={i} 
+          range={instances.length} 
+          limit={instances.length}
+          geometry={item.geometry} 
+          material={item.material}
+        >
             {instances.map((config, j) => (
               <Instance
                 key={j}

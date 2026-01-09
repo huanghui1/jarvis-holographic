@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Vector3 } from 'three';
+import { Vector3, Raycaster, Object3D } from 'three';
 import { HandTrackingState } from '../../types';
-import { FACTORY_LAYOUT, SCENE_SCALE } from './config';
+import { FACTORY_LAYOUT, SCENE_SCALE, ModelConfig } from './config';
 
 // Gesture Controller Component
 export const GestureController: React.FC<{ 
@@ -12,7 +12,8 @@ export const GestureController: React.FC<{
   onWorkshopClick?: (name: string) => void;
   onHover?: (label: string | null, x: number, y: number) => void;
 }> = ({ handTrackingRef, controlsRef, isModalOpen, onWorkshopClick, onHover }) => {
-  const { camera } = useThree();
+  const { camera, scene } = useThree();
+  const raycaster = useRef(new Raycaster()).current;
   const previousHandPos = useRef<{x: number, y: number} | null>(null);
   const previousPinchDist = useRef<number | null>(null); // For dual hand zoom
   const isPinchingRef = useRef(false);
@@ -67,30 +68,46 @@ export const GestureController: React.FC<{
         // --- HOVER LOGIC (WHILE PINCHING) ---
         if (rightHand.isPinching && !isRealDualGesture && onHover) {
              const indexTip = rightHand.landmarks[8];
-             const cursorNDC = {
-                 x: (indexTip.x - 0.5) * 2,
+             
+             // Convert hand coordinates (0-1, y-down) to NDC (-1 to 1, y-up)
+             const ndc = {
+                 x: -(indexTip.x - 0.5) * 2,
                  y: -(indexTip.y - 0.5) * 2
              };
 
-             let minDist = 0.3; 
+             raycaster.setFromCamera(ndc as any, camera);
+             
+             // Intersect with everything in the scene
+             // We need to filter for our specific objects
+             const factoryWorld = scene.getObjectByName('factory-world');
+             const objectsToTest = factoryWorld ? factoryWorld.children : [];
+             const intersects = raycaster.intersectObjects(objectsToTest, true);
+             
              let closestLabel: string | null = null;
-
-             FACTORY_LAYOUT.forEach(item => {
-                 if (!item.label) return;
-                 
-                 const itemPos = new Vector3(...item.position);
-                 itemPos.multiplyScalar(SCENE_SCALE);
-                 itemPos.project(camera);
-                 
-                 const dx = itemPos.x - cursorNDC.x;
-                 const dy = itemPos.y - cursorNDC.y;
-                 const dist = Math.sqrt(dx*dx + dy*dy);
-                 
-                 if (dist < minDist) {
-                     minDist = dist;
-                     closestLabel = item.label;
+             
+             for (const intersect of intersects) {
+                 // Traverse up to find a node with our userData
+                 let current: Object3D | null = intersect.object;
+                 while (current) {
+                     if (current.userData) {
+                         if (current.userData.type === 'model-item') {
+                             closestLabel = current.userData.label;
+                             break;
+                         } else if (current.userData.type === 'instanced-model') {
+                             // For instances, we need the instanceId to know which config to use
+                             const instanceId = intersect.instanceId;
+                             const configs = current.userData.instancesConfig as ModelConfig[];
+                             if (instanceId !== undefined && configs && configs[instanceId]) {
+                                 closestLabel = configs[instanceId].label || null;
+                             }
+                             break;
+                         }
+                     }
+                     current = current.parent;
                  }
-             });
+                 
+                 if (closestLabel) break; // Found the nearest labeled object
+             }
 
              // Pass normalized coordinates (0-1) for UI to scale
              onHover(closestLabel, indexTip.x, indexTip.y);
@@ -101,36 +118,38 @@ export const GestureController: React.FC<{
 
         if (!rightHand.isPinching && lastRightPinchRef.current && !isRealDualGesture) {
              if (onWorkshopClick) {
-                 // 1. Get Hand Cursor Position in NDC (-1 to 1)
                  const indexTip = rightHand.landmarks[8];
-                 const cursorNDC = {
-                     x: (indexTip.x - 0.5) * 2,
+                 const ndc = {
+                     x: -(indexTip.x - 0.5) * 2,
                      y: -(indexTip.y - 0.5) * 2
                  };
 
-                 // 2. Find closest interactive item
-                 // Increased threshold from 0.15 to 0.3 to improve hit rate
-                 let minDist = 0.3; 
+                 raycaster.setFromCamera(ndc as any, camera);
+                 const factoryWorld = scene.getObjectByName('factory-world');
+                 const objectsToTest = factoryWorld ? factoryWorld.children : [];
+                 const intersects = raycaster.intersectObjects(objectsToTest, true);
                  let closestLabel: string | null = null;
 
-                 FACTORY_LAYOUT.forEach(item => {
-                     if (!item.label) return;
-                     
-                     // Convert item position to World Space then to NDC
-                     const itemPos = new Vector3(...item.position);
-                     itemPos.multiplyScalar(SCENE_SCALE); // Apply group scale
-                     itemPos.project(camera); // Project to NDC
-                     
-                     // Check distance in 2D screen space
-                     const dx = itemPos.x - cursorNDC.x;
-                     const dy = itemPos.y - cursorNDC.y;
-                     const dist = Math.sqrt(dx*dx + dy*dy);
-                     
-                     if (dist < minDist) {
-                         minDist = dist;
-                         closestLabel = item.label;
+                 for (const intersect of intersects) {
+                     let current: Object3D | null = intersect.object;
+                     while (current) {
+                         if (current.userData) {
+                             if (current.userData.type === 'model-item') {
+                                 closestLabel = current.userData.label;
+                                 break;
+                             } else if (current.userData.type === 'instanced-model') {
+                                 const instanceId = intersect.instanceId;
+                                 const configs = current.userData.instancesConfig as ModelConfig[];
+                                 if (instanceId !== undefined && configs && configs[instanceId]) {
+                                     closestLabel = configs[instanceId].label || null;
+                                 }
+                                 break;
+                             }
+                         }
+                         current = current.parent;
                      }
-                 });
+                     if (closestLabel) break;
+                 }
 
                  if (closestLabel) {
                      onWorkshopClick(closestLabel);
