@@ -74,6 +74,10 @@ const MainApp: React.FC = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null);
 
+  // Hover Tooltip State
+  const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
   const { progress } = useProgress();
 
   const handleTrackingUpdate = useCallback((newState: HandTrackingState) => {
@@ -84,6 +88,11 @@ const MainApp: React.FC = () => {
       setSelectedWorkshop(workshopName);
       setDetailModalOpen(true);
       SoundService.playLock(); // Additional feedback
+  }, []);
+
+  const handleHover = useCallback((label: string | null, x: number, y: number) => {
+      setHoveredLabel(label);
+      // Removed direct DOM manipulation as we now use HandTrackingCanvas panel
   }, []);
 
   // Boot Sequence Logic
@@ -142,12 +151,15 @@ const MainApp: React.FC = () => {
                       handTrackingRef={handTrackingRef} 
                       isModalOpen={detailModalOpen} 
                       onWorkshopClick={handleWorkshopClick}
+                      onHover={handleHover}
                    />
                 </Suspense>
             </Canvas>
         </ErrorBoundary>
       </div>
 
+      {/* Hover Tooltip - Removed in favor of HandTrackingCanvas Panel */}
+      
       {/* 3. UI/HUD Layer - Only visible when booted */}
       {booted && !introActive && (
           <>
@@ -155,6 +167,7 @@ const MainApp: React.FC = () => {
                 handTrackingRef={handTrackingRef}
                 isModalOpen={detailModalOpen}
                 onCloseModal={() => setDetailModalOpen(false)}
+                hoveredLabel={hoveredLabel}
             />
             <HUDOverlay 
                 handTrackingRef={handTrackingRef} 

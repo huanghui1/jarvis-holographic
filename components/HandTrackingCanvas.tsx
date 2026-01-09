@@ -8,9 +8,10 @@ interface HandTrackingCanvasProps {
   handTrackingRef: React.MutableRefObject<HandTrackingState>;
   isModalOpen?: boolean;
   onCloseModal?: () => void;
+  hoveredLabel?: string | null;
 }
 
-const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef, isModalOpen, onCloseModal }) => {
+const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef, isModalOpen, onCloseModal, hoveredLabel }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const [canvasKey, setCanvasKey] = React.useState(0);
@@ -257,26 +258,28 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
       >
         <div className="bg-black/80 border-l-2 border-alert-red shadow-[0_0_40px_rgba(255,42,42,0.3)] backdrop-blur-xl p-1 rounded-r-lg">
             <div className="flex justify-between items-center bg-gradient-to-r from-alert-red/50 to-transparent p-2 mb-2 border-b border-white/10">
-                <span className="font-display font-bold text-sm tracking-widest text-white">GEO_INTEL_LIVE</span>
-                <div className="w-2 h-2 bg-alert-red rounded-full animate-ping"></div>
+                <span className="font-display font-bold text-sm tracking-widest text-white">
+                    {hoveredLabel ? 'TARGET_LOCKED' : 'SCANNING_AREA'}
+                </span>
+                <div className={`w-2 h-2 rounded-full ${hoveredLabel ? 'bg-alert-red animate-ping' : 'bg-holo-cyan animate-pulse'}`}></div>
             </div>
 
             <div className="p-4 space-y-4">
                 <div className="flex justify-between items-end">
-                    <div className="text-xs text-holo-blue uppercase">目标区域</div>
-                    <div className="text-2xl font-display text-white font-bold drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
-                        {currentRegion}
+                    <div className="text-xs text-holo-blue uppercase">目标识别</div>
+                    <div className="text-xl font-display text-white font-bold drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] text-right">
+                        {hoveredLabel || currentRegion}
                     </div>
                 </div>
 
                 <div className="space-y-3">
                     <div className="space-y-1">
                         <div className="flex justify-between text-[10px] uppercase text-gray-400">
-                            <span>信号强度</span>
-                            <span>98%</span>
+                            <span>匹配度</span>
+                            <span>{hoveredLabel ? '99.9%' : 'SEARCHING...'}</span>
                         </div>
                         <div className="w-full bg-gray-900 h-1.5 overflow-hidden rounded-sm">
-                            <div className="bg-holo-cyan h-full w-[98%] shadow-[0_0_10px_#00F0FF] relative">
+                            <div className={`h-full w-[98%] shadow-[0_0_10px_#00F0FF] relative ${hoveredLabel ? 'bg-alert-red' : 'bg-holo-cyan'}`}>
                                 <div className="absolute top-0 left-0 h-full w-full bg-white/30 animate-[scanline_1s_linear_infinite]"></div>
                             </div>
                         </div>
@@ -284,12 +287,12 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
                     
                      <div className="grid grid-cols-2 gap-2 mt-2">
                          <div className="bg-white/5 p-1 text-center border border-white/10">
-                             <div className="text-[8px] text-gray-400">经度</div>
-                             <div className="font-mono text-xs text-holo-cyan">116.4074</div>
+                             <div className="text-[8px] text-gray-400">状态</div>
+                             <div className="font-mono text-xs text-holo-cyan">{hoveredLabel ? 'ACTIVE' : 'IDLE'}</div>
                          </div>
                          <div className="bg-white/5 p-1 text-center border border-white/10">
-                             <div className="text-[8px] text-gray-400">纬度</div>
-                             <div className="font-mono text-xs text-holo-cyan">39.9042</div>
+                             <div className="text-[8px] text-gray-400">类型</div>
+                             <div className="font-mono text-xs text-holo-cyan">ASSET</div>
                          </div>
                      </div>
                 </div>

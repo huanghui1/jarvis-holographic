@@ -25,7 +25,7 @@ const JarvisIntro: React.FC = () => {
         <div className="relative z-10 flex flex-col items-center justify-center transform transition-all duration-1000 scale-100">
             {/* Main Title */}
             <h1 className="text-8xl font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-holo-cyan tracking-[0.15em] drop-shadow-[0_0_25px_rgba(0,240,255,0.8)] scale-y-90 animate-flash">
-                JARVIS
+              WXAD
             </h1>
             
             {/* Horizontal Glitch Line */}

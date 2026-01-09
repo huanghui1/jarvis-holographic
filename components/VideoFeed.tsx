@@ -162,7 +162,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
       ref={videoRef}
       // Optimize: Removed heavy CSS filters (contrast, brightness, grayscale) for performance
       // Kept only opacity and flip
-      className="absolute top-0 left-0 w-full h-full object-cover opacity-30 pointer-events-none transform -scale-x-100"
+      className="absolute top-0 left-0 w-full h-full object-cover opacity-0 pointer-events-none transform -scale-x-100"
       playsInline
       muted
       autoPlay
