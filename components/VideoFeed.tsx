@@ -1,12 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { MediaPipeService } from '../services/mediapipeService';
 import { HandTrackingState, HandInteractionData } from '../types';
+import { useHandTracking } from '../contexts/HandTrackingContext';
 
-interface VideoFeedProps {
-  onTrackingUpdate: (state: HandTrackingState) => void;
-}
-
-const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
+const VideoFeed: React.FC = () => {
+  const { isTrackingEnabled, handTrackingRef } = useHandTracking();
   const videoRef = useRef<HTMLVideoElement>(null);
   const requestRef = useRef<number | null>(null);
   const lastVideoTimeRef = useRef<number>(-1);
@@ -14,6 +12,19 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
 
   useEffect(() => {
     let isMounted = true;
+
+    // If tracking is disabled, do nothing (video element remains but stream is stopped by cleanup)
+    if (!isTrackingEnabled) {
+      if (videoRef.current) {
+        // Clear video source if it exists
+        if (videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+      }
+      return;
+    }
 
     const startCamera = async () => {
       try {
@@ -128,7 +139,8 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
                       });
                     }
 
-                    onTrackingUpdate(newState);
+                    // Update context ref directly
+                    handTrackingRef.current = newState;
 
                   } catch (error) {
                     console.error("Tracking error:", error);
@@ -155,7 +167,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ onTrackingUpdate }) => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [onTrackingUpdate]);
+  }, [isTrackingEnabled, handTrackingRef]);
 
   return (
     <video

@@ -2,8 +2,15 @@ import React, { useMemo } from 'react';
 import { useGLTF, Instances, Instance } from '@react-three/drei';
 import { Mesh, FrontSide } from 'three';
 import { ModelConfig } from './config';
+import { useHandTracking } from '../../contexts/HandTrackingContext';
 
-export const InstancedModels: React.FC<{ file: string; instances: ModelConfig[] }> = ({ file, instances }) => {
+export const InstancedModels: React.FC<{ 
+  file: string; 
+  instances: ModelConfig[];
+  onWorkshopClick?: (name: string) => void;
+  onHover?: (label: string | null, x: number, y: number) => void;
+}> = ({ file, instances, onWorkshopClick, onHover }) => {
+  const { isTrackingEnabled } = useHandTracking();
   const { scene } = useGLTF(`./models/factory/${file}`);
 
   const meshData = useMemo(() => {
@@ -62,6 +69,26 @@ export const InstancedModels: React.FC<{ file: string; instances: ModelConfig[] 
                 position={config.position}
                 rotation={config.rotation}
                 scale={config.scale || 1}
+                onClick={(e) => {
+                    if (isTrackingEnabled) return;
+                    e.stopPropagation();
+                    if (onWorkshopClick && config.label) {
+                        onWorkshopClick(config.label);
+                    }
+                }}
+                onPointerOver={(e) => {
+                    if (isTrackingEnabled) return;
+                    e.stopPropagation();
+                    if (onHover && config.label) {
+                        onHover(config.label, e.clientX, e.clientY);
+                    }
+                }}
+                onPointerOut={(e) => {
+                    if (isTrackingEnabled) return;
+                    if (onHover) {
+                        onHover(null, 0, 0);
+                    }
+                }}
               />
             ))}
         </Instances>

@@ -5,10 +5,16 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { ModelConfig } from './config';
+import { useHandTracking } from '../../contexts/HandTrackingContext';
 
 gsap.registerPlugin(MotionPathPlugin, useGSAP);
 
-export const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
+export const ModelItem: React.FC<{ 
+  config: ModelConfig;
+  onWorkshopClick?: (name: string) => void;
+  onHover?: (label: string | null, x: number, y: number) => void;
+}> = ({ config, onWorkshopClick, onHover }) => {
+  const { isTrackingEnabled } = useHandTracking();
   // Use a relative path prefix based on environment or ensure base path is correct
   // In Electron production (file://), absolute paths like /models/... resolve to file:///models/... (root of drive)
   // We need relative paths: ./models/... or just models/...
@@ -167,6 +173,26 @@ export const ModelItem: React.FC<{ config: ModelConfig }> = ({ config }) => {
       position={config.position} 
       rotation={outerRotation as any}
       userData={{ label: config.label, type: 'model-item' }}
+      onClick={(e) => {
+        if (isTrackingEnabled) return;
+        e.stopPropagation();
+        if (onWorkshopClick && config.label) {
+            onWorkshopClick(config.label);
+        }
+      }}
+      onPointerOver={(e) => {
+        if (isTrackingEnabled) return;
+        e.stopPropagation();
+        if (onHover && config.label) {
+            onHover(config.label, e.clientX, e.clientY);
+        }
+      }}
+      onPointerOut={(e) => {
+        if (isTrackingEnabled) return;
+        if (onHover) {
+            onHover(null, 0, 0);
+        }
+      }}
     >
       <group rotation={innerRotation as any}>
         <primitive object={clonedScene} scale={config.scale || 1} />

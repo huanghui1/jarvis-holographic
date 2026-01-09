@@ -8,11 +8,10 @@ import { InstancedModels } from './factory/InstancedModels';
 import { GestureController } from './factory/GestureController';
 
 const FactoryScene: React.FC<{ 
-  handTrackingRef?: React.MutableRefObject<HandTrackingState>;
   isModalOpen?: boolean;
   onWorkshopClick?: (name: string) => void;
   onHover?: (label: string | null, x: number, y: number) => void;
-}> = ({ handTrackingRef, isModalOpen, onWorkshopClick, onHover }) => {
+}> = ({ isModalOpen, onWorkshopClick, onHover }) => {
   const { singles, groups } = useMemo(() => {
     const singles: ModelConfig[] = [];
     const groups: Record<string, ModelConfig[]> = {};
@@ -40,9 +39,8 @@ const FactoryScene: React.FC<{
   return (
     <>
       <GestureController 
-        handTrackingRef={handTrackingRef} 
         controlsRef={controlsRef} 
-        isModalOpen={isModalOpen} 
+        isModalOpen={isModalOpen}  
         onWorkshopClick={onWorkshopClick}
         onHover={onHover}
       />
@@ -55,11 +53,22 @@ const FactoryScene: React.FC<{
         <axesHelper args={[100]} />
 
         {singles.map((config, index) => (
-          <ModelItem key={`${config.file}-single-${index}`} config={config} />
+          <ModelItem 
+            key={`${config.file}-single-${index}`} 
+            config={config} 
+            onWorkshopClick={onWorkshopClick}
+            onHover={onHover}
+          />
         ))}
 
         {Object.entries(groups).map(([file, instances]) => (
-          <InstancedModels key={file} file={file} instances={instances} />
+          <InstancedModels 
+            key={file} 
+            file={file} 
+            instances={instances} 
+            onWorkshopClick={onWorkshopClick}
+            onHover={onHover}
+          />
         ))}
       </group>
 

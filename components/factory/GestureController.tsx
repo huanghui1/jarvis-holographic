@@ -1,17 +1,17 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3, Raycaster, Object3D } from 'three';
-import { HandTrackingState } from '../../types';
+import { useHandTracking } from '../../contexts/HandTrackingContext';
 import { FACTORY_LAYOUT, SCENE_SCALE, ModelConfig } from './config';
 
 // Gesture Controller Component
 export const GestureController: React.FC<{ 
-  handTrackingRef?: React.MutableRefObject<HandTrackingState>;
   controlsRef: React.MutableRefObject<any>;
   isModalOpen?: boolean;
   onWorkshopClick?: (name: string) => void;
   onHover?: (label: string | null, x: number, y: number) => void;
-}> = ({ handTrackingRef, controlsRef, isModalOpen, onWorkshopClick, onHover }) => {
+}> = ({ controlsRef, isModalOpen, onWorkshopClick, onHover }) => {
+  const { handTrackingRef, isTrackingEnabled } = useHandTracking();
   const { camera, scene } = useThree();
   const raycaster = useRef(new Raycaster()).current;
   const previousHandPos = useRef<{x: number, y: number} | null>(null);
@@ -53,6 +53,9 @@ export const GestureController: React.FC<{
     // console.log('isModalOpenRef: ', isModalOpenRef.current);
     // Strictly disable all 3D gestures when modal is open (check ref for latest state)
     if (isModalOpenRef.current) return;
+    
+    // Also disable if tracking is turned off globally
+    if (!isTrackingEnabled) return;
     
     if (!handTrackingRef?.current || !controlsRef.current) return;
     

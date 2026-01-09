@@ -3,15 +3,17 @@ import { createPortal } from 'react-dom';
 import { HandTrackingState, RegionName } from '../types';
 import { SoundService } from '../services/soundService';
 import CanvasWorker from '../services/canvas.worker.ts?worker'; // Vite worker import
+import { useHandTracking } from '../contexts/HandTrackingContext';
 
 interface HandTrackingCanvasProps {
-  handTrackingRef: React.MutableRefObject<HandTrackingState>;
   isModalOpen?: boolean;
   onCloseModal?: () => void;
   hoveredLabel?: string | null;
+  hoverPosition?: { x: number, y: number };
 }
 
-const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef, isModalOpen, onCloseModal, hoveredLabel }) => {
+const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ isModalOpen, onCloseModal, hoveredLabel, hoverPosition }) => {
+  const { handTrackingRef, isTrackingEnabled } = useHandTracking();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const [canvasKey, setCanvasKey] = React.useState(0);
@@ -219,12 +221,26 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
                       wasPinchingRef.current = false;
                   }
               }
-              // This block below was likely causing issues by overriding state when modal is open
-              /* 
-              if (hands.rightHand && isModalOpen) {
-                  wasPinchingRef.current = hands.rightHand.isPinching;
-              }
-              */
+          }
+          
+          // --- MOUSE HOVER OVERRIDE ---
+          // If tracking is disabled OR hand is not present, AND we have a mouse hover label
+          // We show the panel at the mouse position
+          if ((!isTrackingEnabled || !hands.rightHand) && !isModalOpen && hoveredLabel && hoverPosition) {
+             if (panelRef.current) {
+                panelRef.current.style.opacity = '1';
+                panelRef.current.style.pointerEvents = 'auto';
+                panelRef.current.style.transform = 'scale(1)';
+                panelRef.current.style.left = `${hoverPosition.x + 20}px`;
+                panelRef.current.style.top = `${hoverPosition.y - 20}px`;
+             }
+          } else if ((!isTrackingEnabled || !hands.rightHand) && !isModalOpen && !hoveredLabel) {
+             // Hide if not hovering (and tracking disabled/no hand)
+             if (panelRef.current) {
+                panelRef.current.style.opacity = '0';
+                panelRef.current.style.pointerEvents = 'none';
+                panelRef.current.style.transform = 'scale(0.9)';
+             }
           }
 
           requestAnimationFrame(interactionLoop);
@@ -232,7 +248,7 @@ const HandTrackingCanvas: React.FC<HandTrackingCanvasProps> = ({ handTrackingRef
       
       const frameId = requestAnimationFrame(interactionLoop);
       return () => cancelAnimationFrame(frameId);
-  }, [handTrackingRef, isModalOpen, onCloseModal]);
+  }, [handTrackingRef, isModalOpen, onCloseModal, hoveredLabel, hoverPosition, isTrackingEnabled]);
 
   return createPortal(
     <>

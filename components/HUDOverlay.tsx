@@ -1,9 +1,9 @@
 import React from 'react';
 import { HandTrackingState } from '../types';
 import { TimeWidget } from './HUDWidgets';
+import { useHandTracking } from '../contexts/HandTrackingContext';
 
 interface HUDOverlayProps {
-  handTrackingRef: React.MutableRefObject<HandTrackingState>;
   isModalOpen?: boolean;
   onCloseModal?: () => void;
 }
@@ -60,7 +60,9 @@ const ArcReactorWidget = React.memo(() => (
   </div>
 ));
 
-const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef }) => {
+const HUDOverlay: React.FC<HUDOverlayProps> = ({ isModalOpen }) => {
+  const { handTrackingRef, isTrackingEnabled, toggleTracking } = useHandTracking();
+
   return (
     <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden font-sans text-holo-cyan select-none z-[9999]">
       <div className="vignette"></div>
@@ -99,23 +101,38 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ handTrackingRef }) => {
            {/* <FileTreeWidget /> */}
            
            {/* Status Widget below tree */}
-           <div className="mt-8 bg-black/60 border-t border-l border-holo-blue p-4 rounded-tr-xl backdrop-blur-md w-64 relative">
+           <div className="mt-8 bg-black/60 border-t border-l border-holo-blue p-4 rounded-tr-xl backdrop-blur-md w-64 relative pointer-events-auto">
                 <div className="absolute top-0 right-0 w-2 h-2 bg-holo-cyan shadow-[0_0_10px_#00F0FF]"></div>
-                <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-700 pb-1">生物识别输入</div>
-                <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                        <span className="text-holo-cyan text-sm font-bold">左手操控模组</span>
-                        <span className={`text-xs px-2 rounded ${handTrackingRef.current.leftHand ? 'bg-holo-cyan text-black' : 'bg-red-900/50 text-red-500'}`}>
-                             {handTrackingRef.current.leftHand ? '在线' : '离线'}
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-holo-cyan text-sm font-bold">右手交互模组</span>
-                        <span className={`text-xs px-2 rounded ${handTrackingRef.current.rightHand ? 'bg-holo-cyan text-black' : 'bg-red-900/50 text-red-500'}`}>
-                             {handTrackingRef.current.rightHand ? '在线' : '离线'}
-                        </span>
-                    </div>
+                <div className="flex justify-between items-center border-b border-gray-700 pb-2 mb-2">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-widest">生物识别输入</div>
+                    <button 
+                        onClick={toggleTracking}
+                        className={`text-[10px] px-2 py-0.5 border ${isTrackingEnabled ? 'border-holo-cyan text-holo-cyan shadow-[0_0_5px_#00F0FF]' : 'border-red-500 text-red-500'} uppercase hover:bg-white/10 transition-colors pointer-events-auto`}
+                    >
+                        {isTrackingEnabled ? '已启用' : '已禁用'}
+                    </button>
                 </div>
+                
+                {isTrackingEnabled ? (
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                            <span className="text-holo-cyan text-sm font-bold">左手操控模组</span>
+                            <span className={`text-xs px-2 rounded ${handTrackingRef.current.leftHand ? 'bg-holo-cyan text-black' : 'bg-red-900/50 text-red-500'}`}>
+                                {handTrackingRef.current.leftHand ? '在线' : '离线'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-holo-cyan text-sm font-bold">右手交互模组</span>
+                            <span className={`text-xs px-2 rounded ${handTrackingRef.current.rightHand ? 'bg-holo-cyan text-black' : 'bg-red-900/50 text-red-500'}`}>
+                                {handTrackingRef.current.rightHand ? '在线' : '离线'}
+                            </span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="py-2 text-center text-red-500/80 text-xs tracking-wider uppercase border border-red-900/30 bg-red-900/10">
+                        系统离线 / 手势追踪关闭
+                    </div>
+                )}
            </div>
       </div>
 
