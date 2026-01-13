@@ -28,6 +28,7 @@ export const InstancedModels: React.FC<{
     scene.updateMatrixWorld(true);
     
     scene.traverse((child) => {
+      console.log(`Model (Instanced): ${file}, Part: ${child.name}, Type: ${child.type}`);
       if ((child as Mesh).isMesh) {
         const mesh = child as Mesh;
         mesh.castShadow = false;

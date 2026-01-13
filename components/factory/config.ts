@@ -183,9 +183,9 @@ export const FACTORY_LAYOUT: ModelConfig[] = [
   { file: '台面1700-3400.glb', position: [-22, 0.8, 5.8], scale: SCALE, label: '台面1700-3400' },
 
   // Inspection
-  { file: 's三坐标机.glb', position: [-2.8, 0, 5.2], scale: SCALE, label: 's三坐标机' },
-  { file: 's三坐标机.glb', position: [-2.8, 0, 8], scale: SCALE, label: 's三坐标机' },
-  { file: 's三坐标机.glb', position: [-2.8, 0, 10.8], scale: SCALE, label: 's三坐标机' },
+  { file: 's三坐标机12.glb', position: [-2.8, 0, 5.2], scale: SCALE, label: 's三坐标机' },
+  { file: 's三坐标机12.glb', position: [-2.8, 0, 8], scale: SCALE, label: 's三坐标机' },
+  { file: 's三坐标机12.glb', position: [-2.8, 0, 10.8], scale: SCALE, label: 's三坐标机' },
 
   // { file: '1000-2000-重型货架.glb', position: [-4.8, 3.5, 12.8], rotation: [0, Math.PI / 2, 0], scale: SCALE, label: 'Shelf A1' },
 

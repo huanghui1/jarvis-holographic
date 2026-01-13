@@ -92,6 +92,8 @@ export const ModelItem: React.FC<{
     
     // Universal Optimization
     clone.traverse((child) => {
+      console.log(`Model: ${config.file}, Part: ${child.name}, Type: ${child.type}`);
+
       if ((child as Mesh).isMesh) {
          const mesh = child as Mesh;
          mesh.castShadow = false;
