@@ -2,6 +2,7 @@ import React from 'react';
 import { HandTrackingState } from '../types';
 import { TimeWidget } from './HUDWidgets';
 import { useHandTracking } from '../contexts/HandTrackingContext';
+import { useControlMode } from '../contexts/ControlModeContext';
 
 interface HUDOverlayProps {
   isModalOpen?: boolean;
@@ -62,6 +63,7 @@ const ArcReactorWidget = React.memo(() => (
 
 const HUDOverlay: React.FC<HUDOverlayProps> = ({ isModalOpen }) => {
   const { handTrackingRef, isTrackingEnabled, toggleTracking } = useHandTracking();
+  const { controlMode, toggleControlMode } = useControlMode();
 
   return (
     <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden font-sans text-holo-cyan select-none z-[9999]">
@@ -85,6 +87,23 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ isModalOpen }) => {
       {/* <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-auto">
           <HolographicTable />
       </div> */}
+
+      {/* --- Roaming Control UI --- */}
+      <div className="absolute top-32 right-8 pointer-events-auto z-40 flex flex-col items-end gap-4">
+         <button 
+            onClick={toggleControlMode}
+            className="px-4 py-1.5 bg-black/50 backdrop-blur-md text-cyan-400 border border-cyan-400 rounded-sm font-mono hover:bg-cyan-900/50 transition-all uppercase tracking-widest text-xs shadow-[0_0_10px_rgba(0,255,255,0.3)]"
+         >
+            {controlMode === 'orbit' ? '[ 启用漫游模式 ]' : '[ 退出漫游模式 ]'}
+         </button>
+         
+         {controlMode === 'character' && (
+             <div className="text-cyan-400 font-mono text-[10px] text-right text-shadow-glow bg-black/30 p-2 rounded backdrop-blur-sm border border-cyan-900/50">
+                <div>W/A/S/D 移动</div>
+                <div>SHIFT 加速</div>
+             </div>
+         )}
+      </div>
 
 
       {/* --- LEFT SIDE PANELS --- */}
@@ -140,9 +159,9 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ isModalOpen }) => {
       {/* --- RIGHT SIDE PANELS --- */}
 
       {/* Right Panel 1: Visuals Frame (Top Right, below title) */}
-      <div className="absolute right-10 top-40 z-30">
+      {/* <div className="absolute right-10 top-40 z-30">
           <VisualsFrame />
-      </div>
+      </div> */}
 
       {/* Right Panel 2: Arc Reactor / Compass (Middle Right) */}
       <div className="absolute right-16 top-1/2 transform -translate-y-1/2 z-30">

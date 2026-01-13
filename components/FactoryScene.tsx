@@ -1,17 +1,30 @@
-import React, { useMemo, useRef } from 'react';
-import { useGLTF, OrbitControls, Environment } from '@react-three/drei';
+import React, { useMemo, useRef, useState } from 'react';
+import { useGLTF, OrbitControls, Environment, KeyboardControls, Html } from '@react-three/drei';
 import { HandTrackingState } from '../types';
 import hdrEnv from '../assets/potsdamer_platz_1k.hdr';
 import { FACTORY_LAYOUT, SCENE_SCALE, ModelConfig } from './factory/config';
 import { ModelItem } from './factory/ModelItem';
 import { InstancedModels } from './factory/InstancedModels';
 import { GestureController } from './factory/GestureController';
+import { CharacterController } from './factory/CharacterController';
+import { useControlMode } from '../contexts/ControlModeContext';
 
 const FactoryScene: React.FC<{ 
   isModalOpen?: boolean;
   onWorkshopClick?: (name: string) => void;
   onHover?: (label: string | null, x: number, y: number) => void;
 }> = ({ isModalOpen, onWorkshopClick, onHover }) => {
+  const { controlMode } = useControlMode();
+  const active = controlMode === 'character';
+
+  const keyboardMap = useMemo(() => [
+    { name: 'forward', keys: ['ArrowUp', 'w', 'W'] },
+    { name: 'backward', keys: ['ArrowDown', 's', 'S'] },
+    { name: 'left', keys: ['ArrowLeft', 'a', 'A'] },
+    { name: 'right', keys: ['ArrowRight', 'd', 'D'] },
+    { name: 'run', keys: ['Shift'] },
+  ], []);
+
   const { singles, groups } = useMemo(() => {
     const singles: ModelConfig[] = [];
     const groups: Record<string, ModelConfig[]> = {};
@@ -37,7 +50,7 @@ const FactoryScene: React.FC<{
   const controlsRef = useRef<any>(null);
 
   return (
-    <>
+    <KeyboardControls map={keyboardMap}>
       <GestureController 
         controlsRef={controlsRef} 
         isModalOpen={isModalOpen}  
@@ -51,6 +64,8 @@ const FactoryScene: React.FC<{
       <group scale={SCENE_SCALE} name="factory-world">
         {/* Debug Helpers */}
         <axesHelper args={[100]} />
+        
+        <CharacterController active={active} sceneScale={SCENE_SCALE} />
 
         {singles.map((config, index) => (
           <ModelItem 
@@ -74,7 +89,7 @@ const FactoryScene: React.FC<{
 
       <OrbitControls 
         ref={controlsRef}
-        enabled={!isModalOpen}
+        enabled={!isModalOpen && controlMode === 'orbit'}
         makeDefault 
         minPolarAngle={0} 
         maxPolarAngle={Math.PI / 2.2} 
@@ -86,7 +101,7 @@ const FactoryScene: React.FC<{
         Use local HDR file to avoid fetch errors in production
       */}
       <Environment files={hdrEnv} />
-    </>
+    </KeyboardControls>
   );
 };
 

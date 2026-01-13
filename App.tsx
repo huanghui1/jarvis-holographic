@@ -14,6 +14,7 @@ import { HandTrackingState, RegionName } from './types';
 import { SoundService } from './services/soundService';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { HandTrackingProvider } from './contexts/HandTrackingContext';
+import { ControlModeProvider } from './contexts/ControlModeContext';
 
 // Error Boundary for React Components
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
@@ -125,6 +126,7 @@ const MainApp: React.FC = () => {
   
   return (
     <HandTrackingProvider>
+      <ControlModeProvider>
       <div className="relative w-full h-screen bg-black overflow-hidden animate-flash">
         {/* 1. Background Camera Layer */}
         <VideoFeed />
@@ -226,6 +228,7 @@ const MainApp: React.FC = () => {
         )}
 
       </div>
+      </ControlModeProvider>
     </HandTrackingProvider>
   );
 };

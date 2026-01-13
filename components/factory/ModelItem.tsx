@@ -89,10 +89,11 @@ export const ModelItem: React.FC<{
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
+    console.log(`Cloned scene for ${config.file}`, clone);
     
     // Universal Optimization
     clone.traverse((child) => {
-      console.log(`Model: ${config.file}, Part: ${child.name}, Type: ${child.type}`);
+      // console.log(`Model: ${config.file}, Part: ${child.name}, Type: ${child.type}`);
 
       if ((child as Mesh).isMesh) {
          const mesh = child as Mesh;
@@ -133,6 +134,7 @@ export const ModelItem: React.FC<{
                     // Yellow is approx (1, 1, 0)
                     if (c.r > 0.5 && c.g > 0.5 && c.b < 0.5) {
                         isMarking = true;
+                        console.log(`Marking yellow found: ${mesh.name}`);
                     }
                 }
              }

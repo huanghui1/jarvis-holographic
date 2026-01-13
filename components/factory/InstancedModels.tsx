@@ -26,9 +26,9 @@ export const InstancedModels: React.FC<{
     // updateMatrixWorld() is usually harmless if the scene is static.
     
     scene.updateMatrixWorld(true);
-    
+    console.log(`Scene (Instanced): ${file}`, scene);
     scene.traverse((child) => {
-      console.log(`Model (Instanced): ${file}, Part: ${child.name}, Type: ${child.type}`);
+      // console.log(`Model (Instanced): ${file}, Part: ${child.name}, Type: ${child.type}`);
       if ((child as Mesh).isMesh) {
         const mesh = child as Mesh;
         mesh.castShadow = false;
