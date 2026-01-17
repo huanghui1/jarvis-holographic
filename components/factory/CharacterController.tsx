@@ -12,7 +12,8 @@ export const CharacterController: React.FC<{
   sceneScale?: number;
 }> = ({ active, sceneScale = 1 }) => {
   const group = useRef<THREE.Group>(null);
-  const { scene: playerScene, animations } = useGLTF('/models/player.glb');
+  // Use relative path for model loading to support Electron file:// protocol
+  const { scene: playerScene, animations } = useGLTF('./models/player.glb');
   const { scene: worldScene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
   
