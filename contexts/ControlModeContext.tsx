@@ -8,7 +8,7 @@ interface ControlModeContextType {
   setControlMode: (mode: ControlMode) => void;
 }
 
-const ControlModeContext = createContext<ControlModeContextType | undefined>(undefined);
+export const ControlModeContext = createContext<ControlModeContextType | undefined>(undefined);
 
 export const ControlModeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [controlMode, setControlModeState] = useState<ControlMode>('orbit');

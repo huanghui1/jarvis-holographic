@@ -88,34 +88,26 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ isModalOpen }) => {
           <HolographicTable />
       </div> */}
 
-      {/* --- Roaming Control UI --- */}
-      <div className="absolute top-32 right-8 pointer-events-auto z-40 flex flex-col items-end gap-4">
-         <button 
-            onClick={toggleControlMode}
-            className="px-4 py-1.5 bg-black/50 backdrop-blur-md text-cyan-400 border border-cyan-400 rounded-sm font-mono hover:bg-cyan-900/50 transition-all uppercase tracking-widest text-xs shadow-[0_0_10px_rgba(0,255,255,0.3)]"
-         >
-            {controlMode === 'orbit' ? '[ 启用漫游模式 ]' : '[ 退出漫游模式 ]'}
-         </button>
-         
-         {controlMode === 'character' && (
-             <div className="text-cyan-400 font-mono text-[10px] text-right text-shadow-glow bg-black/30 p-2 rounded backdrop-blur-sm border border-cyan-900/50">
-                <div>W/A/S/D 移动</div>
-                <div>SHIFT 加速</div>
-             </div>
-         )}
-      </div>
+
 
 
       {/* --- LEFT SIDE PANELS --- */}
 
-      {/* Left Panel 1: Power/Storage Gauge */}
-      <div className="absolute left-16 top-1/3 transform -translate-y-1/2 z-30 flex flex-col gap-8">
-         <CircularGauge label="生产效率" value="74%" />
-         <CircularGauge label="生产订单" value="98%" color="text-holo-blue" />
-      </div>
+      {/* Left Panel 1: Power/Storage Gauge (Moved to Right) */}
+
 
       {/* Left Panel 2: File Explorer (Bottom Left) */}
-      <div className="absolute bottom-32 left-8 z-30">
+      <div className="absolute bottom-24 left-8 z-30">
+           {/* Atmosphere Widget (Moved from Right) */}
+           <div className="flex flex-col items-center gap-2 mb-8">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-holo-cyan/70 border-b border-holo-cyan/30 pb-1 w-full text-center">Atmosphere</div>
+                <ArcReactorWidget />
+                <div className="flex justify-between w-full px-2 text-[8px] font-mono text-holo-cyan/50">
+                    <span>O2: 98%</span>
+                    <span>TEMP: 24°C</span>
+                </div>
+           </div>
+
            <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Directory</div>
            {/* <FileTreeWidget /> */}
            
@@ -123,7 +115,7 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ isModalOpen }) => {
            <div className="mt-8 bg-black/60 border-t border-l border-holo-blue p-4 rounded-tr-xl backdrop-blur-md w-64 relative pointer-events-auto">
                 <div className="absolute top-0 right-0 w-2 h-2 bg-holo-cyan shadow-[0_0_10px_#00F0FF]"></div>
                 <div className="flex justify-between items-center border-b border-gray-700 pb-2 mb-2">
-                    <div className="text-[10px] text-gray-400 uppercase tracking-widest">生物识别输入</div>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-widest">手势识别输入</div>
                     <button 
                         onClick={toggleTracking}
                         className={`text-[10px] px-2 py-0.5 border ${isTrackingEnabled ? 'border-holo-cyan text-holo-cyan shadow-[0_0_5px_#00F0FF]' : 'border-red-500 text-red-500'} uppercase hover:bg-white/10 transition-colors pointer-events-auto`}
@@ -153,6 +145,23 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ isModalOpen }) => {
                     </div>
                 )}
            </div>
+
+           {/* --- Roaming Control UI --- */}
+           <div className="mt-4 pointer-events-auto z-40 flex flex-col items-start gap-4">
+              <button 
+                 onClick={toggleControlMode}
+                 className="px-4 py-1.5 bg-black/50 backdrop-blur-md text-cyan-400 border border-cyan-400 rounded-sm font-mono hover:bg-cyan-900/50 transition-all uppercase tracking-widest text-xs shadow-[0_0_10px_rgba(0,255,255,0.3)]"
+              >
+                 {controlMode === 'orbit' ? '[ 启用漫游模式 ]' : '[ 退出漫游模式 ]'}
+              </button>
+              
+              {controlMode === 'character' && (
+                  <div className="text-cyan-400 font-mono text-[10px] text-left text-shadow-glow bg-black/30 p-2 rounded backdrop-blur-sm border border-cyan-900/50">
+                     <div>W/A/S/D 移动</div>
+                     <div>SHIFT 加速</div>
+                  </div>
+              )}
+           </div>
       </div>
 
 
@@ -163,15 +172,12 @@ const HUDOverlay: React.FC<HUDOverlayProps> = ({ isModalOpen }) => {
           <VisualsFrame />
       </div> */}
 
-      {/* Right Panel 2: Arc Reactor / Compass (Middle Right) */}
-      <div className="absolute right-16 top-1/2 transform -translate-y-1/2 z-30">
-           <div className="flex flex-col items-center gap-2">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-holo-cyan/70 border-b border-holo-cyan/30 pb-1 w-full text-center">Atmosphere</div>
-                <ArcReactorWidget />
-                <div className="flex justify-between w-full px-2 text-[8px] font-mono text-holo-cyan/50">
-                    <span>O2: 98%</span>
-                    <span>TEMP: 24°C</span>
-                </div>
+      {/* Right Panel 2: Combined Right Column (Gauges) */}
+      <div className="absolute right-16 bottom-64 z-30 flex flex-col gap-8 items-center">
+           {/* Power/Storage Gauges */}
+           <div className="flex flex-col gap-8">
+              <CircularGauge label="生产效率" value="74%" />
+              <CircularGauge label="生产订单" value="98%" color="text-holo-blue" />
            </div>
       </div>
     </div>

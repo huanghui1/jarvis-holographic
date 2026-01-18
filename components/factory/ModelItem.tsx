@@ -7,6 +7,8 @@ import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { ModelConfig } from './config';
 import { useHandTracking } from '../../contexts/HandTrackingContext';
 
+import { useControlMode } from '../../contexts/ControlModeContext';
+
 gsap.registerPlugin(MotionPathPlugin, useGSAP);
 
 export const ModelItem: React.FC<{ 
@@ -15,6 +17,7 @@ export const ModelItem: React.FC<{
   onHover?: (label: string | null, x: number, y: number) => void;
 }> = ({ config, onWorkshopClick, onHover }) => {
   const { isTrackingEnabled } = useHandTracking();
+  const { controlMode } = useControlMode(); // Use control mode
   // Use a relative path prefix based on environment or ensure base path is correct
   // In Electron production (file://), absolute paths like /models/... resolve to file:///models/... (root of drive)
   // We need relative paths: ./models/... or just models/...
@@ -178,21 +181,29 @@ export const ModelItem: React.FC<{
       rotation={outerRotation as any}
       userData={{ label: config.label, type: 'model-item' }}
       onClick={(e) => {
-        if (isTrackingEnabled) return;
+        if (isTrackingEnabled || controlMode === 'character') return;
         e.stopPropagation();
         if (onWorkshopClick && config.label) {
-            onWorkshopClick(config.label);
+            // Ignore "Production Workshop" for click
+            if (config.label !== '生产车间') {
+                onWorkshopClick(config.label);
+            }
         }
       }}
       onPointerOver={(e) => {
-        if (isTrackingEnabled) return;
+        if (isTrackingEnabled || controlMode === 'character') return;
         e.stopPropagation();
         if (onHover && config.label) {
-            onHover(config.label, e.clientX, e.clientY);
+            // Ignore "Production Workshop" for hover tooltip
+            if (config.label === '生产车间') {
+                onHover(null, 0, 0);
+            } else {
+                onHover(config.label, e.clientX, e.clientY);
+            }
         }
       }}
       onPointerOut={(e) => {
-        if (isTrackingEnabled) return;
+        if (isTrackingEnabled || controlMode === 'character') return;
         if (onHover) {
             onHover(null, 0, 0);
         }

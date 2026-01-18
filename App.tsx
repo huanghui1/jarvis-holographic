@@ -13,8 +13,19 @@ import { WorkshopDetailModal } from './components/WorkshopDetailModal';
 import { HandTrackingState, RegionName } from './types';
 import { SoundService } from './services/soundService';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import { HandTrackingProvider } from './contexts/HandTrackingContext';
-import { ControlModeProvider } from './contexts/ControlModeContext';
+import { HandTrackingProvider, HandTrackingContext } from './contexts/HandTrackingContext';
+import { ControlModeProvider, ControlModeContext } from './contexts/ControlModeContext';
+
+// Context Bridge to pass contexts into Canvas
+const ContextBridge = ({ children, handTracking, controlMode }: { children: React.ReactNode, handTracking: any, controlMode: any }) => {
+  return (
+    <HandTrackingContext.Provider value={handTracking}>
+      <ControlModeContext.Provider value={controlMode}>
+        {children}
+      </ControlModeContext.Provider>
+    </HandTrackingContext.Provider>
+  );
+};
 
 // Error Boundary for React Components
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
@@ -62,7 +73,10 @@ function Loader() {
   );
 }
 
-const MainApp: React.FC = () => {
+const MainAppContent: React.FC = () => {
+  const handTracking = React.useContext(HandTrackingContext);
+  const controlMode = React.useContext(ControlModeContext);
+
   const [booted, setBooted] = useState(false);
   const [introActive, setIntroActive] = useState(false);
   const [bootStep, setBootStep] = useState(0);
@@ -125,8 +139,6 @@ const MainApp: React.FC = () => {
   // Since this is a single page app without router, we just need to ensure assets are loaded correctly.
   
   return (
-    <HandTrackingProvider>
-      <ControlModeProvider>
       <div className="relative w-full h-screen bg-black overflow-hidden animate-flash">
         {/* 1. Background Camera Layer */}
         <VideoFeed />
@@ -141,11 +153,13 @@ const MainApp: React.FC = () => {
             >
                   <Perf position="top-left" deepAnalyze={true} />
                   <Suspense fallback={<Loader />}>
-                     <FactoryScene 
-                        isModalOpen={detailModalOpen} 
-                        onWorkshopClick={handleWorkshopClick}
-                        onHover={handleHover}
-                     />
+                     <ContextBridge handTracking={handTracking} controlMode={controlMode}>
+                         <FactoryScene 
+                            isModalOpen={detailModalOpen} 
+                            onWorkshopClick={handleWorkshopClick}
+                            onHover={handleHover}
+                         />
+                     </ContextBridge>
                   </Suspense>
               </Canvas>
           </ErrorBoundary>
@@ -228,6 +242,14 @@ const MainApp: React.FC = () => {
         )}
 
       </div>
+  );
+};
+
+const MainApp: React.FC = () => {
+  return (
+    <HandTrackingProvider>
+      <ControlModeProvider>
+        <MainAppContent />
       </ControlModeProvider>
     </HandTrackingProvider>
   );

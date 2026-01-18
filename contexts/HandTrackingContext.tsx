@@ -8,10 +8,10 @@ interface HandTrackingContextType {
   handTrackingRef: React.MutableRefObject<HandTrackingState>;
 }
 
-const HandTrackingContext = createContext<HandTrackingContextType | undefined>(undefined);
+export const HandTrackingContext = createContext<HandTrackingContextType | undefined>(undefined);
 
 export const HandTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isTrackingEnabled, setIsTrackingEnabled] = useState(true);
+  const [isTrackingEnabled, setIsTrackingEnabled] = useState(false);
   
   // Use a ref for high-frequency updates to avoid re-renders
   const handTrackingRef = useRef<HandTrackingState>({
